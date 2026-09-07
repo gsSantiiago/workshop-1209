@@ -24,10 +24,17 @@ export class Container {
     this.instances.set(token, instance)
     return instance
   }
+
+  clear(): void {
+    this.factories.clear()
+    this.instances.clear()
+  }
 }
 
 export const tokens = {
   db: 'db',
+  itemRepository: 'itemRepository',
+  itemService: 'itemService',
 } as const
 
 export const container = new Container()
