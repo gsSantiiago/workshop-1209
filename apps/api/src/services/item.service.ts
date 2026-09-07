@@ -1,19 +1,19 @@
-import type { ItemRecord } from '../repositories/item.repository'
+import { ItemRepository, type ItemRecord } from '../repositories/item.repository'
 
-export type ItemStore = {
-  list(): ItemRecord[] | Promise<ItemRecord[]>
-  create(item: ItemRecord): void | Promise<void>
-  deleteById(id: string): boolean | Promise<boolean>
+export type ItemInput = {
+  sku?: string
+  name?: string
+  unit?: string
 }
 
 export class ItemService {
-  constructor(private readonly store: ItemStore) {}
+  constructor(private readonly items: ItemRepository) {}
 
   list(): Promise<ItemRecord[]> | ItemRecord[] {
-    return this.store.list()
+    return this.items.list()
   }
 
-  async create(input: { sku?: string; name?: string; unit?: string }): Promise<ItemRecord> {
+  async create(input: ItemInput): Promise<ItemRecord> {
     const sku = input.sku?.trim() ?? ''
     const name = input.name?.trim() ?? ''
     const unit = input.unit?.trim() ?? ''
@@ -30,7 +30,7 @@ export class ItemService {
     }
 
     try {
-      await this.store.create(item)
+      await this.items.create(item)
     } catch (error) {
       if (isUniqueViolation(error)) {
         throw httpError('SKU already exists', 409)
@@ -42,7 +42,7 @@ export class ItemService {
   }
 
   async deleteById(id: string): Promise<void> {
-    const deleted = await this.store.deleteById(id)
+    const deleted = await this.items.deleteById(id)
     if (!deleted) {
       throw httpError('Item not found', 404)
     }
