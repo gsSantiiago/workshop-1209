@@ -1,0 +1,10 @@
+{
+  "name": "fake-erp",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "bun --filter '*' dev",
+    "dev:api": "bun --filter @fake-erp/api dev",
+    "dev:web": "bun --filter @fake-erp/web dev"
+  }
+}
