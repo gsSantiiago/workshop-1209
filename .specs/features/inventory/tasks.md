@@ -526,8 +526,8 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Phase 4 Inventory is listed under Done
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] Phase 4 Inventory is listed under Done
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build
