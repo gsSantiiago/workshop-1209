@@ -218,12 +218,12 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Success subtracts source and adds dest (create dest when missing)
-- [ ] Insufficient or missing source → 400 `Insufficient Stock`; `apply` not called
-- [ ] Same Warehouse → 400 spec message; `apply` not called
-- [ ] Blank ids / bad quantity / FK match spec messages
-- [ ] Gate check passes: `bun test apps/api/src/services`
-- [ ] Test count: 8+ Transfer tests pass (no silent deletions)
+- [x] Success subtracts source and adds dest (create dest when missing)
+- [x] Insufficient or missing source → 400 `Insufficient Stock`; `apply` not called
+- [x] Same Warehouse → 400 spec message; `apply` not called
+- [x] Blank ids / bad quantity / FK match spec messages
+- [x] Gate check passes: `bun test apps/api/src/services`
+- [x] Test count: 8+ Transfer tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

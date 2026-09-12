@@ -147,6 +147,234 @@ describe('MovementService', () => {
     }
   })
 
+  const validTransfer = {
+    fromWarehouseId: 'warehouse-a',
+    toWarehouseId: 'warehouse-b',
+    itemId: 'item-1',
+    quantity: 3,
+  }
+
+  test('createTransfer persists a transfer Movement with UUID id and ISO-8601 createdAt', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findStock.onFirstCall().resolves({
+      id: 'stock-a',
+      warehouseId: 'warehouse-a',
+      itemId: 'item-1',
+      quantity: 10,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.findStock.onSecondCall().resolves({
+      id: 'stock-b',
+      warehouseId: 'warehouse-b',
+      itemId: 'item-1',
+      quantity: 5,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    const created = await service.createTransfer(validTransfer)
+
+    expect(created.id).toMatch(UUID)
+    expect(created.createdAt).toMatch(ISO_8601)
+    expect(created.type).toBe('transfer')
+    expect(created.warehouseId).toBe('warehouse-a')
+    expect(created.toWarehouseId).toBe('warehouse-b')
+    expect(created.itemId).toBe('item-1')
+    expect(created.quantity).toBe(3)
+    expect(created.jobId).toBeNull()
+    expect(movements.apply.calledOnce).toBe(true)
+    expect(movements.apply.firstCall.args[0]).toEqual(created)
+  })
+
+  test('createTransfer subtracts source Stock and adds destination Stock', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findStock.onFirstCall().resolves({
+      id: 'stock-a',
+      warehouseId: 'warehouse-a',
+      itemId: 'item-1',
+      quantity: 10,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.findStock.onSecondCall().resolves({
+      id: 'stock-b',
+      warehouseId: 'warehouse-b',
+      itemId: 'item-1',
+      quantity: 5,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    await service.createTransfer(validTransfer)
+
+    expect(movements.apply.firstCall.args[1]).toEqual([
+      { warehouseId: 'warehouse-a', itemId: 'item-1', quantity: 7 },
+      { warehouseId: 'warehouse-b', itemId: 'item-1', quantity: 8 },
+    ])
+  })
+
+  test('createTransfer creates destination Stock at 3 when it is missing', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findStock.onFirstCall().resolves({
+      id: 'stock-a',
+      warehouseId: 'warehouse-a',
+      itemId: 'item-1',
+      quantity: 10,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.findStock.onSecondCall().resolves(null)
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    await service.createTransfer(validTransfer)
+
+    expect(movements.apply.firstCall.args[1]).toEqual([
+      { warehouseId: 'warehouse-a', itemId: 'item-1', quantity: 7 },
+      { warehouseId: 'warehouse-b', itemId: 'item-1', quantity: 3 },
+    ])
+  })
+
+  test('createTransfer with missing or short source Stock throws 400 and does not call apply', async () => {
+    const sources = [null, {
+      id: 'stock-a',
+      warehouseId: 'warehouse-a',
+      itemId: 'item-1',
+      quantity: 2,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    }]
+
+    for (const source of sources) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      movements.findStock.resolves(source)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createTransfer(validTransfer)
+        throw new Error('expected createTransfer to throw')
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe('Insufficient Stock')
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createTransfer with the same Warehouse throws 400 and does not call apply', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    const service = new MovementService(movements)
+
+    try {
+      await service.createTransfer({
+        fromWarehouseId: 'warehouse-a',
+        toWarehouseId: 'warehouse-a',
+        itemId: 'item-1',
+        quantity: 3,
+      })
+      throw new Error('expected createTransfer to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+      expect((error as Error).message).toBe('fromWarehouseId and toWarehouseId must differ')
+    }
+
+    expect(movements.apply.notCalled).toBe(true)
+    expect(movements.findStock.notCalled).toBe(true)
+  })
+
+  test('createTransfer with blank ids throws 400 and does not call apply', async () => {
+    const cases = [
+      { fromWarehouseId: '', toWarehouseId: 'warehouse-b', itemId: 'item-1', quantity: 3 },
+      { fromWarehouseId: 'warehouse-a', toWarehouseId: '', itemId: 'item-1', quantity: 3 },
+      { fromWarehouseId: 'warehouse-a', toWarehouseId: 'warehouse-b', itemId: '', quantity: 3 },
+      { fromWarehouseId: '   ', toWarehouseId: 'warehouse-b', itemId: 'item-1', quantity: 3 },
+    ]
+
+    for (const input of cases) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createTransfer(input)
+        throw new Error(`expected createTransfer to throw for ${JSON.stringify(input)}`)
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe(
+          'fromWarehouseId, toWarehouseId, itemId, and a positive quantity are required',
+        )
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createTransfer with invalid quantity throws 400 and does not call apply', async () => {
+    const cases = [undefined, null, '3', NaN, Infinity, 0, -1]
+
+    for (const quantity of cases) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createTransfer({
+          fromWarehouseId: 'warehouse-a',
+          toWarehouseId: 'warehouse-b',
+          itemId: 'item-1',
+          quantity,
+        })
+        throw new Error(`expected createTransfer to throw for ${String(quantity)}`)
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe('quantity must be a positive number')
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createTransfer maps a foreign-key error to 400 Warehouse or Item not found', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findStock.onFirstCall().resolves({
+      id: 'stock-a',
+      warehouseId: 'warehouse-a',
+      itemId: 'item-1',
+      quantity: 10,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.findStock.onSecondCall().resolves(null)
+    movements.apply.rejects(foreignKeyByCode())
+    const service = new MovementService(movements)
+
+    try {
+      await service.createTransfer(validTransfer)
+      throw new Error('expected createTransfer to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+      expect((error as Error).message).toBe('Warehouse or Item not found')
+    }
+  })
+
+  test('createTransfer equal to source Stock leaves source at 0', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findStock.onFirstCall().resolves({
+      id: 'stock-a',
+      warehouseId: 'warehouse-a',
+      itemId: 'item-1',
+      quantity: 3,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.findStock.onSecondCall().resolves(null)
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    await service.createTransfer(validTransfer)
+
+    expect(movements.apply.firstCall.args[1]).toEqual([
+      { warehouseId: 'warehouse-a', itemId: 'item-1', quantity: 0 },
+      { warehouseId: 'warehouse-b', itemId: 'item-1', quantity: 3 },
+    ])
+  })
+
   test('createReceipt maps a foreign-key error to 400 Warehouse or Item not found', async () => {
     const errors = [foreignKeyByCode(), foreignKeyByMessage()]
 
