@@ -44,6 +44,14 @@ _Avoid_: obra, canteiro, project, site, Warehouse (as this place)
 A Receipt, Transfer, or Issue that writes Stock quantity. Nothing else writes Stock.
 _Avoid_: movimento, stock write by hand
 
+**Supplier**:
+Who supplies an Item. Identified by a unique name.
+_Avoid_: vendor, fornecedor, company
+
+**Purchase**:
+An order for one Item, one quantity, one Warehouse, from one Supplier. It does not write Stock.
+_Avoid_: pedido, order, Receipt (as this order)
+
 **Receipt**:
 Quantity of an Item entering a Warehouse.
 _Avoid_: recebimento, entrada, Purchase (as this Movement)

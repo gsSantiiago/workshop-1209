@@ -11,12 +11,9 @@ Language lives in `CONTEXT.md`. Terms below that are not in the glossary yet are
 - **Identity** — User and Role: Administrator, Operator.
 - **Job** — The work site. Not a Warehouse. No quantity on the Job.
 - **Inventory** — Movements that change Stock: Receipt, Transfer between Warehouses, Issue to a Job.
+- **Procurement** — Supplier and Purchase. A Receipt from a Purchase raises Stock.
 
 ## Phases
-
-### 5. Procurement
-
-Supplier and Purchase. A Receipt from a Purchase raises Stock.
 
 ### 6. Staff and Assignment
 

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
-type Screen = 'catalog' | 'warehouse' | 'job' | 'stock' | 'inventory' | 'users'
+type Screen = 'catalog' | 'warehouse' | 'job' | 'stock' | 'inventory' | 'procurement' | 'users'
 type Role = 'Administrator' | 'Operator'
 
 type User = {
@@ -47,6 +47,22 @@ type Movement = {
   warehouseId: string
   toWarehouseId: string | null
   jobId: string | null
+  purchaseId: string | null
+  createdAt: string
+}
+
+type Supplier = {
+  id: string
+  name: string
+  createdAt: string
+}
+
+type Purchase = {
+  id: string
+  supplierId: string
+  itemId: string
+  warehouseId: string
+  quantity: number
   createdAt: string
 }
 
@@ -59,12 +75,19 @@ function App() {
   const [jobs, setJobs] = useState<Job[]>([])
   const [stock, setStock] = useState<Stock[]>([])
   const [movements, setMovements] = useState<Movement[]>([])
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [purchases, setPurchases] = useState<Purchase[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('')
   const [warehouseName, setWarehouseName] = useState('')
   const [jobName, setJobName] = useState('')
+  const [supplierName, setSupplierName] = useState('')
+  const [purchaseSupplierId, setPurchaseSupplierId] = useState('')
+  const [purchaseItemId, setPurchaseItemId] = useState('')
+  const [purchaseWarehouseId, setPurchaseWarehouseId] = useState('')
+  const [purchaseQuantity, setPurchaseQuantity] = useState('')
   const [warehouseId, setWarehouseId] = useState('')
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('')
@@ -121,6 +144,18 @@ function App() {
     setMovements((await response.json()) as Movement[])
   }
 
+  async function refreshSuppliers() {
+    const response = await request('/api/suppliers')
+    if (!response.ok) return
+    setSuppliers((await response.json()) as Supplier[])
+  }
+
+  async function refreshPurchases() {
+    const response = await request('/api/purchases')
+    if (!response.ok) return
+    setPurchases((await response.json()) as Purchase[])
+  }
+
   async function refreshUsers() {
     const response = await request('/api/users')
     if (!response.ok) return
@@ -134,6 +169,8 @@ function App() {
       refreshJobs(),
       refreshStock(),
       refreshMovements(),
+      refreshSuppliers(),
+      refreshPurchases(),
       refreshUsers(),
     ])
   }
@@ -303,6 +340,78 @@ function App() {
     setError(body.error ?? 'Could not delete Job')
   }
 
+  async function onCreateSupplier(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/suppliers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: supplierName }),
+    })
+    if (response.status === 201) {
+      setSupplierName('')
+      await refreshSuppliers()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Supplier')
+  }
+
+  async function onDeleteSupplier(id: string) {
+    setError('')
+    const response = await request(`/api/suppliers/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshSuppliers()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete Supplier')
+  }
+
+  async function onCreatePurchase(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/purchases', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        supplierId: purchaseSupplierId,
+        itemId: purchaseItemId,
+        warehouseId: purchaseWarehouseId,
+        quantity: Number(purchaseQuantity),
+      }),
+    })
+    if (response.status === 201) {
+      setPurchaseQuantity('')
+      await refreshPurchases()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Purchase')
+  }
+
+  async function onDeletePurchase(id: string) {
+    setError('')
+    const response = await request(`/api/purchases/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshPurchases()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete Purchase')
+  }
+
+  async function onReceivePurchase(id: string) {
+    setError('')
+    const response = await request(`/api/purchases/${id}/receipts`, { method: 'POST' })
+    if (response.status === 201) {
+      await refreshAll()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not receive Purchase')
+  }
+
   async function onCreateReceipt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
@@ -383,6 +492,14 @@ function App() {
 
   function jobNameOf(id: string) {
     return jobs.find((job) => job.id === id)?.name ?? id
+  }
+
+  function supplierNameOf(id: string) {
+    return suppliers.find((supplier) => supplier.id === id)?.name ?? id
+  }
+
+  function purchaseIsReceived(id: string) {
+    return movements.some((movement) => movement.purchaseId === id)
   }
 
   if (!ready) {
@@ -490,6 +607,17 @@ function App() {
             }}
           >
             Inventory
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'procurement' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('procurement')
+            }}
+          >
+            Procurement
           </button>
           <button
             className="nav-link"
@@ -893,6 +1021,145 @@ function App() {
                         ? jobNameOf(movement.jobId)
                         : ''}
                   </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
+      {screen === 'procurement' ? (
+        <section className="page">
+          <header className="page-banner page-banner-forest">
+            <h1>Procurement</h1>
+            <p className="lede">Supplier and Purchase. A Receipt from a Purchase raises Stock.</p>
+          </header>
+          <form className="panel panel-soft" onSubmit={(event) => void onCreateSupplier(event)}>
+            <label>
+              Name
+              <input
+                name="supplierName"
+                value={supplierName}
+                onChange={(event) => setSupplierName(event.target.value)}
+                required
+              />
+            </label>
+            <button className="btn-primary" type="submit">
+              Create Supplier
+            </button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {suppliers.length === 0 ? (
+            <p className="empty">No Supplier yet.</p>
+          ) : (
+            <ul className="record-list">
+              {suppliers.map((supplier) => (
+                <li className="supplier" key={supplier.id}>
+                  <span>{supplier.name}</span>
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteSupplier(supplier.id)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form className="panel panel-soft" onSubmit={(event) => void onCreatePurchase(event)}>
+            <label>
+              Supplier
+              <select
+                name="purchaseSupplierId"
+                value={purchaseSupplierId}
+                onChange={(event) => setPurchaseSupplierId(event.target.value)}
+                required
+              >
+                <option value="">Select Supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Item
+              <select
+                name="purchaseItemId"
+                value={purchaseItemId}
+                onChange={(event) => setPurchaseItemId(event.target.value)}
+                required
+              >
+                <option value="">Select Item</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Warehouse
+              <select
+                name="purchaseWarehouseId"
+                value={purchaseWarehouseId}
+                onChange={(event) => setPurchaseWarehouseId(event.target.value)}
+                required
+              >
+                <option value="">Select Warehouse</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input
+                name="purchaseQuantity"
+                type="number"
+                min="0"
+                step="any"
+                value={purchaseQuantity}
+                onChange={(event) => setPurchaseQuantity(event.target.value)}
+                required
+              />
+            </label>
+            <button className="btn-primary" type="submit">
+              Create Purchase
+            </button>
+          </form>
+          {purchases.length === 0 ? (
+            <p className="empty">No Purchase yet.</p>
+          ) : (
+            <ul className="record-list">
+              {purchases.map((purchase) => (
+                <li className="purchase" key={purchase.id}>
+                  <span>{supplierNameOf(purchase.supplierId)}</span>
+                  <span>{itemLabelOf(purchase.itemId)}</span>
+                  <span>
+                    {purchase.quantity} {itemUnitOf(purchase.itemId)}
+                  </span>
+                  <span>{warehouseNameOf(purchase.warehouseId)}</span>
+                  {purchaseIsReceived(purchase.id) ? null : (
+                    <button
+                      className="btn-primary btn-compact"
+                      type="button"
+                      onClick={() => void onReceivePurchase(purchase.id)}
+                    >
+                      Receive
+                    </button>
+                  )}
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeletePurchase(purchase.id)}
+                  >
+                    Delete
+                  </button>
                 </li>
               ))}
             </ul>
