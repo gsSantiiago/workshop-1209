@@ -233,7 +233,7 @@ function App() {
       return
     }
     const body = (await response.json()) as { error?: string }
-    setError(body.error ?? 'Não foi possível criar o item')
+    setError(body.error ?? 'Could not create Item')
   }
 
   async function onDeleteItem(id: string) {
@@ -244,7 +244,7 @@ function App() {
       return
     }
     const body = (await response.json()) as { error?: string }
-    setError(body.error ?? 'Não foi possível excluir o item')
+    setError(body.error ?? 'Could not delete Item')
   }
 
   async function onCreateWarehouse(event: FormEvent<HTMLFormElement>) {
@@ -391,111 +391,134 @@ function App() {
 
   if (!currentUser) {
     return (
-      <main>
-        <h1>Sign in</h1>
-        <form onSubmit={(event) => void onLogin(event)}>
-          <label>
-            Email
-            <input
-              name="email"
-              type="email"
-              value={loginEmail}
-              onChange={(event) => setLoginEmail(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Password
-            <input
-              name="password"
-              type="password"
-              value={loginPassword}
-              onChange={(event) => setLoginPassword(event.target.value)}
-              required
-            />
-          </label>
-          <button type="submit">Sign in</button>
-        </form>
-        {error ? <p role="alert">{error}</p> : null}
-      </main>
+      <div className="auth">
+        <header className="top-nav">
+          <span className="wordmark">Fake ERP</span>
+        </header>
+        <main className="hero-band">
+          <section className="auth-card panel panel-cream">
+            <h1>Sign in</h1>
+            <p className="lede">Administrator or Operator.</p>
+            <form onSubmit={(event) => void onLogin(event)}>
+              <label>
+                Email
+                <input
+                  name="email"
+                  type="email"
+                  value={loginEmail}
+                  onChange={(event) => setLoginEmail(event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  value={loginPassword}
+                  onChange={(event) => setLoginPassword(event.target.value)}
+                  required
+                />
+              </label>
+              <button className="btn-primary" type="submit">
+                Sign in
+              </button>
+            </form>
+            {error ? <p role="alert">{error}</p> : null}
+          </section>
+        </main>
+      </div>
     )
   }
 
   return (
-    <main>
-      <nav>
-        <button
-          type="button"
-          aria-current={screen === 'catalog' ? 'page' : undefined}
-          onClick={() => {
-            setError('')
-            setScreen('catalog')
-          }}
-        >
-          Catalog
-        </button>
-        <button
-          type="button"
-          aria-current={screen === 'warehouse' ? 'page' : undefined}
-          onClick={() => {
-            setError('')
-            setScreen('warehouse')
-          }}
-        >
-          Warehouse
-        </button>
-        <button
-          type="button"
-          aria-current={screen === 'job' ? 'page' : undefined}
-          onClick={() => {
-            setError('')
-            setScreen('job')
-          }}
-        >
-          Job
-        </button>
-        <button
-          type="button"
-          aria-current={screen === 'stock' ? 'page' : undefined}
-          onClick={() => {
-            setError('')
-            setScreen('stock')
-          }}
-        >
-          Stock
-        </button>
-        <button
-          type="button"
-          aria-current={screen === 'inventory' ? 'page' : undefined}
-          onClick={() => {
-            setError('')
-            setScreen('inventory')
-          }}
-        >
-          Inventory
-        </button>
-        <button
-          type="button"
-          aria-current={screen === 'users' ? 'page' : undefined}
-          onClick={() => {
-            setError('')
-            setScreen('users')
-          }}
-        >
-          Users
-        </button>
+    <div className="app">
+      <header className="top-nav">
+        <span className="wordmark">Fake ERP</span>
+        <nav>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'catalog' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('catalog')
+            }}
+          >
+            Catalog
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'warehouse' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('warehouse')
+            }}
+          >
+            Warehouse
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'job' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('job')
+            }}
+          >
+            Job
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'stock' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('stock')
+            }}
+          >
+            Stock
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'inventory' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('inventory')
+            }}
+          >
+            Inventory
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'users' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setScreen('users')
+            }}
+          >
+            Users
+          </button>
+        </nav>
         <div className="session">
           <span>{currentUser.email}</span>
-          <button type="button" onClick={() => void onLogout()}>
+          <button className="btn-secondary btn-compact" type="button" onClick={() => void onLogout()}>
             Logout
           </button>
         </div>
-      </nav>
+      </header>
+      <main className="canvas">
 
       {screen === 'catalog' ? (
-        <>
-          <h1>Catálogo</h1>
-          <form onSubmit={(event) => void onCreateItem(event)}>
+        <section className="page">
+          <header className="page-banner page-banner-coral">
+            <h1>Catalog</h1>
+            <p className="lede">The master list of Items. It has no balance.</p>
+          </header>
+          <form className="panel panel-cream" onSubmit={(event) => void onCreateItem(event)}>
             <label>
               SKU
               <input
@@ -506,7 +529,7 @@ function App() {
               />
             </label>
             <label>
-              Nome
+              Name
               <input
                 name="name"
                 value={name}
@@ -515,7 +538,7 @@ function App() {
               />
             </label>
             <label>
-              Unidade
+              Unit
               <input
                 name="unit"
                 value={unit}
@@ -523,32 +546,41 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Criar item</button>
+            <button className="btn-primary" type="submit">
+              Create Item
+            </button>
           </form>
           {error ? <p role="alert">{error}</p> : null}
           {items.length === 0 ? (
-            <p>Nenhum item no catálogo.</p>
+            <p className="empty">No Item in the Catalog.</p>
           ) : (
-            <ul>
+            <ul className="record-list">
               {items.map((item) => (
                 <li key={item.id}>
                   <span>{item.sku}</span>
                   <span>{item.name}</span>
                   <span>{item.unit}</span>
-                  <button type="button" onClick={() => void onDeleteItem(item.id)}>
-                    Excluir
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteItem(item.id)}
+                  >
+                    Delete
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </>
+        </section>
       ) : null}
 
       {screen === 'warehouse' ? (
-        <>
-          <h1>Warehouse</h1>
-          <form onSubmit={(event) => void onCreateWarehouse(event)}>
+        <section className="page">
+          <header className="page-banner page-banner-forest">
+            <h1>Warehouse</h1>
+            <p className="lede">The depot where a quantity of an Item lives.</p>
+          </header>
+          <form className="panel panel-soft" onSubmit={(event) => void onCreateWarehouse(event)}>
             <label>
               Name
               <input
@@ -558,30 +590,39 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Create Warehouse</button>
+            <button className="btn-primary" type="submit">
+              Create Warehouse
+            </button>
           </form>
           {error ? <p role="alert">{error}</p> : null}
           {warehouses.length === 0 ? (
-            <p>No Warehouse yet.</p>
+            <p className="empty">No Warehouse yet.</p>
           ) : (
-            <ul>
+            <ul className="record-list">
               {warehouses.map((warehouse) => (
                 <li className="warehouse" key={warehouse.id}>
                   <span>{warehouse.name}</span>
-                  <button type="button" onClick={() => void onDeleteWarehouse(warehouse.id)}>
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteWarehouse(warehouse.id)}
+                  >
                     Delete
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </>
+        </section>
       ) : null}
 
       {screen === 'job' ? (
-        <>
-          <h1>Job</h1>
-          <form onSubmit={(event) => void onCreateJob(event)}>
+        <section className="page">
+          <header className="page-banner page-banner-cream">
+            <h1>Job</h1>
+            <p className="lede">The work site. Not a Warehouse. Quantity does not belong here.</p>
+          </header>
+          <form className="panel panel-soft" onSubmit={(event) => void onCreateJob(event)}>
             <label>
               Name
               <input
@@ -591,34 +632,43 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Create Job</button>
+            <button className="btn-primary" type="submit">
+              Create Job
+            </button>
           </form>
           {error ? <p role="alert">{error}</p> : null}
           {jobs.length === 0 ? (
-            <p>No Job yet.</p>
+            <p className="empty">No Job yet.</p>
           ) : (
-            <ul>
+            <ul className="record-list">
               {jobs.map((job) => (
                 <li className="job" key={job.id}>
                   <span>{job.name}</span>
-                  <button type="button" onClick={() => void onDeleteJob(job.id)}>
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteJob(job.id)}
+                  >
                     Delete
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </>
+        </section>
       ) : null}
 
       {screen === 'stock' ? (
-        <>
-          <h1>Stock</h1>
+        <section className="page">
+          <header className="page-banner page-banner-mint">
+            <h1>Stock</h1>
+            <p className="lede">The quantity of one Item in one Warehouse.</p>
+          </header>
           {error ? <p role="alert">{error}</p> : null}
           {stock.length === 0 ? (
-            <p>No Stock yet.</p>
+            <p className="empty">No Stock yet.</p>
           ) : (
-            <ul>
+            <ul className="record-list">
               {stock.map((row) => (
                 <li className="stock" key={row.id}>
                   <span>{warehouseNameOf(row.warehouseId)}</span>
@@ -630,13 +680,17 @@ function App() {
               ))}
             </ul>
           )}
-        </>
+        </section>
       ) : null}
 
       {screen === 'inventory' ? (
-        <>
-          <h1>Inventory</h1>
-          <form onSubmit={(event) => void onCreateReceipt(event)}>
+        <section className="page">
+          <header className="page-banner page-banner-dark">
+            <h1>Inventory</h1>
+            <p className="lede">A Receipt, Transfer, or Issue that writes Stock quantity.</p>
+          </header>
+          <div className="movement-grid">
+          <form className="panel panel-peach" onSubmit={(event) => void onCreateReceipt(event)}>
             <h2>Receipt</h2>
             <label>
               Warehouse
@@ -682,9 +736,11 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Post Receipt</button>
+            <button className="btn-primary" type="submit">
+              Post Receipt
+            </button>
           </form>
-          <form onSubmit={(event) => void onCreateTransfer(event)}>
+          <form className="panel panel-mint" onSubmit={(event) => void onCreateTransfer(event)}>
             <h2>Transfer</h2>
             <label>
               From Warehouse
@@ -746,9 +802,11 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Post Transfer</button>
+            <button className="btn-primary" type="submit">
+              Post Transfer
+            </button>
           </form>
-          <form onSubmit={(event) => void onCreateIssue(event)}>
+          <form className="panel panel-cream" onSubmit={(event) => void onCreateIssue(event)}>
             <h2>Issue</h2>
             <label>
               Warehouse
@@ -810,13 +868,16 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Post Issue</button>
+            <button className="btn-primary" type="submit">
+              Post Issue
+            </button>
           </form>
+          </div>
           {error ? <p role="alert">{error}</p> : null}
           {movements.length === 0 ? (
-            <p>No Movement yet.</p>
+            <p className="empty">No Movement yet.</p>
           ) : (
-            <ul>
+            <ul className="record-list">
               {movements.map((movement) => (
                 <li className="movement" key={movement.id}>
                   <span>{movement.type}</span>
@@ -836,13 +897,16 @@ function App() {
               ))}
             </ul>
           )}
-        </>
+        </section>
       ) : null}
 
       {screen === 'users' ? (
-        <>
-          <h1>Users</h1>
-          <form onSubmit={(event) => void onCreateUser(event)}>
+        <section className="page">
+          <header className="page-banner page-banner-cream">
+            <h1>Users</h1>
+            <p className="lede">A User has one Role: Administrator or Operator.</p>
+          </header>
+          <form className="panel panel-soft" onSubmit={(event) => void onCreateUser(event)}>
             <label>
               Email
               <input
@@ -875,27 +939,34 @@ function App() {
                 <option value="Administrator">Administrator</option>
               </select>
             </label>
-            <button type="submit">Create User</button>
+            <button className="btn-primary" type="submit">
+              Create User
+            </button>
           </form>
           {error ? <p role="alert">{error}</p> : null}
           {users.length === 0 ? (
-            <p>No User yet.</p>
+            <p className="empty">No User yet.</p>
           ) : (
-            <ul>
+            <ul className="record-list">
               {users.map((user) => (
                 <li className="user" key={user.id}>
                   <span>{user.email}</span>
                   <span>{user.role}</span>
-                  <button type="button" onClick={() => void onDeleteUser(user.id)}>
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteUser(user.id)}
+                  >
                     Delete
                   </button>
                 </li>
               ))}
             </ul>
           )}
-        </>
+        </section>
       ) : null}
-    </main>
+      </main>
+    </div>
   )
 }
 
