@@ -344,9 +344,9 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Four handlers call the service and return 200/201 as designed
-- [ ] No DELETE or PATCH
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] Four handlers call the service and return 200/201 as designed
+- [x] No DELETE or PATCH
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build

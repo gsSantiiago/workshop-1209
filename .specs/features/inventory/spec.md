@@ -200,7 +200,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-31 | P1: GET Stock | T14, T16 | In Tasks |
 | INV-32 | P1: POST Stock 404 | T14, T15, T16 | In Tasks |
 | INV-33 | P1: DELETE Stock 404 | T14, T15, T16 | In Tasks |
-| INV-34 | P1: No Movement delete | T11 | In Tasks |
+| INV-34 | P1: No Movement delete | T11 | Implementing |
 | INV-35 | P1: Inventory screen forms | T1, T17 | Implementing |
 | INV-36 | P1: Screen Receipt | T17 | In Tasks |
 | INV-37 | P1: Screen Transfer | T17 | In Tasks |
