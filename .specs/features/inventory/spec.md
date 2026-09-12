@@ -168,12 +168,12 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
 | INV-01 | P1: Receipt persist 201 | T5, T13 | Implementing |
-| INV-02 | P1: Receipt creates Stock | T5, T13 | In Tasks |
-| INV-03 | P1: Receipt adds to Stock | T5, T13 | In Tasks |
-| INV-04 | P1: Receipt bad quantity | T5, T13 | In Tasks |
-| INV-05 | P1: Receipt blank ids | T5, T13 | In Tasks |
-| INV-06 | P1: Receipt missing refs | T5, T13 | In Tasks |
-| INV-07 | P1: List contains Receipt | T5, T13 | In Tasks |
+| INV-02 | P1: Receipt creates Stock | T5, T13 | Implementing |
+| INV-03 | P1: Receipt adds to Stock | T5, T13 | Implementing |
+| INV-04 | P1: Receipt bad quantity | T5, T13 | Implementing |
+| INV-05 | P1: Receipt blank ids | T5, T13 | Implementing |
+| INV-06 | P1: Receipt missing refs | T5, T13 | Implementing |
+| INV-07 | P1: List contains Receipt | T5, T13 | Implementing |
 | INV-08 | P1: GET Stock after Receipt | T13, T16 | In Tasks |
 | INV-09 | P1: Receipt 401 | T13 | In Tasks |
 | INV-10 | P1: Operator Receipt | T13 | In Tasks |

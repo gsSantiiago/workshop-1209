@@ -191,12 +191,12 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] `createReceipt` persists via `apply` with type `receipt`
-- [ ] Blank ids → 400 spec message; bad quantity → 400; FK → 400 `Warehouse or Item not found`
-- [ ] Missing Stock → insert qty; existing Stock → add qty
-- [ ] Unit tests stub the repository; no `new MovementRepository`
-- [ ] Gate check passes: `bun test apps/api/src/services`
-- [ ] Test count: 7+ Receipt/list tests pass (no silent deletions)
+- [x] `createReceipt` persists via `apply` with type `receipt`
+- [x] Blank ids → 400 spec message; bad quantity → 400; FK → 400 `Warehouse or Item not found`
+- [x] Missing Stock → insert qty; existing Stock → add qty
+- [x] Unit tests stub the repository; no `new MovementRepository`
+- [x] Gate check passes: `bun test apps/api/src/services`
+- [x] Test count: 7+ Receipt/list tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick
