@@ -298,8 +298,8 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Tokens exist and the file still typechecks
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] Tokens exist and the file still typechecks
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build
