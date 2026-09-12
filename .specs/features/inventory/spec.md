@@ -167,45 +167,45 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| INV-01 | P1: Receipt persist 201 | T5, T13 | Implementing |
-| INV-02 | P1: Receipt creates Stock | T5, T13 | Implementing |
-| INV-03 | P1: Receipt adds to Stock | T5, T13 | Implementing |
-| INV-04 | P1: Receipt bad quantity | T5, T13 | Implementing |
-| INV-05 | P1: Receipt blank ids | T5, T13 | Implementing |
-| INV-06 | P1: Receipt missing refs | T5, T13 | Implementing |
-| INV-07 | P1: List contains Receipt | T5, T13 | Implementing |
-| INV-08 | P1: GET Stock after Receipt | T13, T16 | Implementing |
-| INV-09 | P1: Receipt 401 | T13 | Implementing |
-| INV-10 | P1: Operator Receipt | T13 | Implementing |
-| INV-11 | P1: Transfer persist 201 | T6, T13 | Implementing |
-| INV-12 | P1: Transfer both Stocks | T6, T13 | Implementing |
-| INV-13 | P1: Transfer creates dest | T6, T13 | Implementing |
-| INV-14 | P1: Transfer insufficient | T6, T13 | Implementing |
-| INV-15 | P1: Transfer same Warehouse | T6, T13 | Implementing |
-| INV-16 | P1: Transfer blank ids | T6, T13 | Implementing |
-| INV-17 | P1: Transfer bad quantity | T6, T13 | Implementing |
-| INV-18 | P1: Transfer missing refs | T6, T13 | Implementing |
+| INV-01 | P1: Receipt persist 201 | T5, T13 | Verified |
+| INV-02 | P1: Receipt creates Stock | T5, T13 | Verified |
+| INV-03 | P1: Receipt adds to Stock | T5, T13 | Verified |
+| INV-04 | P1: Receipt bad quantity | T5, T13 | Verified |
+| INV-05 | P1: Receipt blank ids | T5, T13 | Verified |
+| INV-06 | P1: Receipt missing refs | T5, T13 | Verified |
+| INV-07 | P1: List contains Receipt | T5, T13 | Verified |
+| INV-08 | P1: GET Stock after Receipt | T13, T16 | Verified |
+| INV-09 | P1: Receipt 401 | T13 | Verified |
+| INV-10 | P1: Operator Receipt | T13 | Verified |
+| INV-11 | P1: Transfer persist 201 | T6, T13 | Verified |
+| INV-12 | P1: Transfer both Stocks | T6, T13 | Verified |
+| INV-13 | P1: Transfer creates dest | T6, T13 | Verified |
+| INV-14 | P1: Transfer insufficient | T6, T13 | Verified |
+| INV-15 | P1: Transfer same Warehouse | T6, T13 | Verified |
+| INV-16 | P1: Transfer blank ids | T6, T13 | Verified |
+| INV-17 | P1: Transfer bad quantity | T6, T13 | Verified |
+| INV-18 | P1: Transfer missing refs | T6, T13 | Verified |
 | INV-19 | P1: Transfer transaction | T4, T6 | Implementing |
-| INV-20 | P1: Operator Transfer | T13 | Implementing |
-| INV-21 | P1: Issue persist 201 | T7, T13 | Implementing |
-| INV-22 | P1: Issue subtracts Stock | T7, T13 | Implementing |
-| INV-23 | P1: Issue keeps zero | T7, T13 | Implementing |
-| INV-24 | P1: Issue insufficient | T7, T13 | Implementing |
-| INV-25 | P1: Issue blank ids | T7, T13 | Implementing |
-| INV-26 | P1: Issue bad quantity | T7, T13 | Implementing |
-| INV-27 | P1: Issue missing Warehouse/Item | T7, T13 | Implementing |
-| INV-28 | P1: Issue missing Job | T7, T13 | Implementing |
-| INV-29 | P1: Operator Issue | T13 | Implementing |
-| INV-30 | P1: Job delete with Issue | T8, T13 | Implementing |
-| INV-31 | P1: GET Stock | T14, T16 | Implementing |
-| INV-32 | P1: POST Stock 404 | T14, T15, T16 | Implementing |
-| INV-33 | P1: DELETE Stock 404 | T14, T15, T16 | Implementing |
-| INV-34 | P1: No Movement delete | T11, T19 | Implementing |
-| INV-35 | P1: Inventory screen forms | T1, T17 | Implementing |
-| INV-36 | P1: Screen Receipt | T17 | Implementing |
-| INV-37 | P1: Screen Transfer | T17 | Implementing |
-| INV-38 | P1: Screen Issue | T17 | Implementing |
-| INV-39 | P1: Stock screen read-only | T17 | Implementing |
+| INV-20 | P1: Operator Transfer | T13 | Verified |
+| INV-21 | P1: Issue persist 201 | T7, T13 | Verified |
+| INV-22 | P1: Issue subtracts Stock | T7, T13 | Verified |
+| INV-23 | P1: Issue keeps zero | T7, T13 | Verified |
+| INV-24 | P1: Issue insufficient | T7, T13 | Verified |
+| INV-25 | P1: Issue blank ids | T7, T13 | Verified |
+| INV-26 | P1: Issue bad quantity | T7, T13 | Verified |
+| INV-27 | P1: Issue missing Warehouse/Item | T7, T13 | Verified |
+| INV-28 | P1: Issue missing Job | T7, T13 | Verified |
+| INV-29 | P1: Operator Issue | T13 | Verified |
+| INV-30 | P1: Job delete with Issue | T8, T13 | Verified |
+| INV-31 | P1: GET Stock | T14, T16 | Verified |
+| INV-32 | P1: POST Stock 404 | T14, T15, T16 | Verified |
+| INV-33 | P1: DELETE Stock 404 | T14, T15, T16 | Verified |
+| INV-34 | P1: No Movement delete | T11, T19 | Verified |
+| INV-35 | P1: Inventory screen forms | T1, T17 | Verified |
+| INV-36 | P1: Screen Receipt | T17 | Verified |
+| INV-37 | P1: Screen Transfer | T17 | Verified |
+| INV-38 | P1: Screen Issue | T17 | Verified |
+| INV-39 | P1: Stock screen read-only | T17 | Verified |
 
 **ID format:** `INV-NN`
 
