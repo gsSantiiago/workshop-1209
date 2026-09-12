@@ -45,3 +45,18 @@ export const stock = sqliteTable(
     uniqueIndex('stock_warehouse_item_unique').on(table.warehouseId, table.itemId),
   ],
 )
+
+export const movements = sqliteTable('movements', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+  itemId: text('item_id')
+    .notNull()
+    .references(() => items.id),
+  quantity: real('quantity').notNull(),
+  warehouseId: text('warehouse_id')
+    .notNull()
+    .references(() => warehouses.id),
+  toWarehouseId: text('to_warehouse_id').references(() => warehouses.id),
+  jobId: text('job_id').references(() => jobs.id),
+  createdAt: text('created_at').notNull(),
+})

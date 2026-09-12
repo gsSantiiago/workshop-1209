@@ -118,9 +118,9 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Columns match design: `id`, `type`, `item_id`, `quantity`, `warehouse_id`, `to_warehouse_id`, `job_id`, `created_at`
-- [ ] FKs point at items, warehouses, jobs
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] Columns match design: `id`, `type`, `item_id`, `quantity`, `warehouse_id`, `to_warehouse_id`, `job_id`, `created_at`
+- [x] FKs point at items, warehouses, jobs
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build

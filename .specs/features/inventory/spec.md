@@ -167,7 +167,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| INV-01 | P1: Receipt persist 201 | T5, T13 | In Tasks |
+| INV-01 | P1: Receipt persist 201 | T5, T13 | Implementing |
 | INV-02 | P1: Receipt creates Stock | T5, T13 | In Tasks |
 | INV-03 | P1: Receipt adds to Stock | T5, T13 | In Tasks |
 | INV-04 | P1: Receipt bad quantity | T5, T13 | In Tasks |
@@ -177,7 +177,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-08 | P1: GET Stock after Receipt | T13, T16 | In Tasks |
 | INV-09 | P1: Receipt 401 | T13 | In Tasks |
 | INV-10 | P1: Operator Receipt | T13 | In Tasks |
-| INV-11 | P1: Transfer persist 201 | T6, T13 | In Tasks |
+| INV-11 | P1: Transfer persist 201 | T6, T13 | Implementing |
 | INV-12 | P1: Transfer both Stocks | T6, T13 | In Tasks |
 | INV-13 | P1: Transfer creates dest | T6, T13 | In Tasks |
 | INV-14 | P1: Transfer insufficient | T6, T13 | In Tasks |
@@ -187,7 +187,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-18 | P1: Transfer missing refs | T6, T13 | In Tasks |
 | INV-19 | P1: Transfer transaction | T4, T6 | In Tasks |
 | INV-20 | P1: Operator Transfer | T13 | In Tasks |
-| INV-21 | P1: Issue persist 201 | T7, T13 | In Tasks |
+| INV-21 | P1: Issue persist 201 | T7, T13 | Implementing |
 | INV-22 | P1: Issue subtracts Stock | T7, T13 | In Tasks |
 | INV-23 | P1: Issue keeps zero | T7, T13 | In Tasks |
 | INV-24 | P1: Issue insufficient | T7, T13 | In Tasks |
