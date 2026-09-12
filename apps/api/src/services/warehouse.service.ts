@@ -1,58 +1,52 @@
-import { ItemRepository, type ItemRecord } from '../repositories/item.repository'
+import { WarehouseRepository, type WarehouseRecord } from '../repositories/warehouse.repository'
 
-export type ItemInput = {
-  sku?: string
+export type WarehouseInput = {
   name?: string
-  unit?: string
 }
 
-export class ItemService {
-  constructor(private readonly items: ItemRepository) {}
+export class WarehouseService {
+  constructor(private readonly warehouses: WarehouseRepository) {}
 
-  list(): Promise<ItemRecord[]> | ItemRecord[] {
-    return this.items.list()
+  list(): Promise<WarehouseRecord[]> | WarehouseRecord[] {
+    return this.warehouses.list()
   }
 
-  async create(input: ItemInput): Promise<ItemRecord> {
-    const sku = input.sku?.trim() ?? ''
+  async create(input: WarehouseInput): Promise<WarehouseRecord> {
     const name = input.name?.trim() ?? ''
-    const unit = input.unit?.trim() ?? ''
-    if (!sku || !name || !unit) {
-      throw httpError('sku, name, and unit are required', 400)
+    if (!name) {
+      throw httpError('name is required', 400)
     }
 
-    const item: ItemRecord = {
+    const warehouse: WarehouseRecord = {
       id: crypto.randomUUID(),
-      sku,
       name,
-      unit,
       createdAt: new Date().toISOString(),
     }
 
     try {
-      await this.items.create(item)
+      await this.warehouses.create(warehouse)
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw httpError('SKU already exists', 409)
+        throw httpError('Warehouse already exists', 409)
       }
       throw error
     }
 
-    return item
+    return warehouse
   }
 
   async deleteById(id: string): Promise<void> {
     let deleted: boolean
     try {
-      deleted = await this.items.deleteById(id)
+      deleted = await this.warehouses.deleteById(id)
     } catch (error) {
       if (isForeignKeyViolation(error)) {
-        throw httpError('Item has Stock', 409)
+        throw httpError('Warehouse has Stock', 409)
       }
       throw error
     }
     if (!deleted) {
-      throw httpError('Item not found', 404)
+      throw httpError('Warehouse not found', 404)
     }
   }
 }

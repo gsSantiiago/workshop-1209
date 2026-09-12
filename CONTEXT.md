@@ -1,25 +1,29 @@
 # Fake ERP
 
-ERP de aula para traders/contractors: cadastro mestre de materiais, depois quantidade em depósito e compra.
+Classroom ERP for traders/contractors: a master catalog of materials, then quantity in a warehouse and purchase.
 
 ## Language
 
 **Item**:
-Material ou insumo que se compra e se estoca. Existe no cadastro mesmo sem nenhuma quantidade.
-_Avoid_: Product, produto, catalog item (como entidade)
+A material or input that is bought and stocked. It exists in the catalog even with no quantity.
+_Avoid_: Product, produto, catalog item (as an entity)
 
-**Catálogo**:
-A lista mestre de Items. Não tem saldo.
-_Avoid_: estoque, inventory, warehouse
+**Catalog**:
+The master list of Items. It has no balance.
+_Avoid_: Catálogo, estoque, inventory, warehouse
 
 **SKU**:
-Código estável e único no catálogo que identifica um Item. Não muda quando a quantidade muda.
-_Avoid_: id interno como identificador de negócio
+A stable, unique code in the catalog that identifies an Item. It does not change when quantity changes.
+_Avoid_: internal id as a business identifier
 
-**Unidade**:
-Como se conta o Item (saco, metro, peça). Nesta fatia, texto no próprio Item.
-_Avoid_: UoM como entidade, unit of measure table
+**Unit**:
+How an Item is counted (bag, meter, piece). In this slice, text on the Item itself.
+_Avoid_: Unidade, UoM as an entity, unit of measure table
 
 **Warehouse**:
-Depósito onde uma quantidade de um Item vive. A quantidade pertence aqui, não ao Item.
-_Avoid_: estoque no Item, stock no cadastro
+The depot where a quantity of an Item lives. Quantity belongs here, not on the Item.
+_Avoid_: stock on the Item, stock in the catalog
+
+**Stock**:
+The quantity of one Item in one Warehouse. An Item can have Stock in more than one Warehouse.
+_Avoid_: inventory on the Item, balance on the Catalog, estoque

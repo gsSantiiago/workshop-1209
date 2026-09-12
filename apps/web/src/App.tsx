@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
+type Screen = 'catalog' | 'warehouse' | 'stock'
+
 type Item = {
   id: string
   sku: string
@@ -9,25 +11,73 @@ type Item = {
   createdAt: string
 }
 
+type Warehouse = {
+  id: string
+  name: string
+  createdAt: string
+}
+
+type Stock = {
+  id: string
+  warehouseId: string
+  itemId: string
+  quantity: number
+  createdAt: string
+}
+
 function App() {
+  const [screen, setScreen] = useState<Screen>('catalog')
   const [items, setItems] = useState<Item[]>([])
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [stock, setStock] = useState<Stock[]>([])
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('')
+  const [warehouseName, setWarehouseName] = useState('')
+  const [warehouseId, setWarehouseId] = useState('')
+  const [itemId, setItemId] = useState('')
+  const [quantity, setQuantity] = useState('')
   const [error, setError] = useState('')
 
-  async function refresh() {
+  async function refreshItems() {
     const response = await fetch('/api/items')
     if (!response.ok) return
-    const data = (await response.json()) as Item[]
-    setItems(data)
+    setItems((await response.json()) as Item[])
+  }
+
+  async function refreshWarehouses() {
+    const response = await fetch('/api/warehouses')
+    if (!response.ok) return
+    setWarehouses((await response.json()) as Warehouse[])
+  }
+
+  async function refreshStock() {
+    const response = await fetch('/api/stock')
+    if (!response.ok) return
+    setStock((await response.json()) as Stock[])
+  }
+
+  async function refreshAll() {
+    await Promise.all([refreshItems(), refreshWarehouses(), refreshStock()])
   }
 
   useEffect(() => {
-    void refresh()
+    void refreshAll()
   }, [])
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (warehouseId && !warehouses.some((warehouse) => warehouse.id === warehouseId)) {
+      setWarehouseId('')
+    }
+  }, [warehouseId, warehouses])
+
+  useEffect(() => {
+    if (itemId && !items.some((item) => item.id === itemId)) {
+      setItemId('')
+    }
+  }, [itemId, items])
+
+  async function onCreateItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
     const response = await fetch('/api/items', {
@@ -39,71 +89,286 @@ function App() {
       setSku('')
       setName('')
       setUnit('')
-      await refresh()
+      await refreshItems()
       return
     }
     const body = (await response.json()) as { error?: string }
     setError(body.error ?? 'Não foi possível criar o item')
   }
 
-  async function onDelete(id: string) {
+  async function onDeleteItem(id: string) {
     setError('')
     const response = await fetch(`/api/items/${id}`, { method: 'DELETE' })
     if (response.status === 204) {
-      await refresh()
+      await refreshAll()
+      return
     }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Não foi possível excluir o item')
+  }
+
+  async function onCreateWarehouse(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await fetch('/api/warehouses', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: warehouseName }),
+    })
+    if (response.status === 201) {
+      setWarehouseName('')
+      await refreshWarehouses()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Warehouse')
+  }
+
+  async function onDeleteWarehouse(id: string) {
+    setError('')
+    const response = await fetch(`/api/warehouses/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshAll()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete Warehouse')
+  }
+
+  async function onCreateStock(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await fetch('/api/stock', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        warehouseId,
+        itemId,
+        quantity: Number(quantity),
+      }),
+    })
+    if (response.status === 201) {
+      setQuantity('')
+      await refreshStock()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Stock')
+  }
+
+  async function onDeleteStock(id: string) {
+    setError('')
+    const response = await fetch(`/api/stock/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshStock()
+    }
+  }
+
+  function warehouseNameOf(id: string) {
+    return warehouses.find((warehouse) => warehouse.id === id)?.name ?? id
+  }
+
+  function itemLabelOf(id: string) {
+    const item = items.find((row) => row.id === id)
+    return item ? `${item.sku} ${item.name}` : id
+  }
+
+  function itemUnitOf(id: string) {
+    return items.find((row) => row.id === id)?.unit ?? ''
   }
 
   return (
     <main>
-      <h1>Catálogo</h1>
-      <form onSubmit={(event) => void onSubmit(event)}>
-        <label>
-          SKU
-          <input
-            name="sku"
-            value={sku}
-            onChange={(event) => setSku(event.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Nome
-          <input
-            name="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-          />
-        </label>
-        <label>
-          Unidade
-          <input
-            name="unit"
-            value={unit}
-            onChange={(event) => setUnit(event.target.value)}
-            required
-          />
-        </label>
-        <button type="submit">Criar item</button>
-      </form>
-      {error ? <p role="alert">{error}</p> : null}
-      {items.length === 0 ? (
-        <p>Nenhum item no catálogo.</p>
-      ) : (
-        <ul>
-          {items.map((item) => (
-            <li key={item.id}>
-              <span>{item.sku}</span>
-              <span>{item.name}</span>
-              <span>{item.unit}</span>
-              <button type="button" onClick={() => void onDelete(item.id)}>
-                Excluir
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <nav>
+        <button
+          type="button"
+          aria-current={screen === 'catalog' ? 'page' : undefined}
+          onClick={() => {
+            setError('')
+            setScreen('catalog')
+          }}
+        >
+          Catalog
+        </button>
+        <button
+          type="button"
+          aria-current={screen === 'warehouse' ? 'page' : undefined}
+          onClick={() => {
+            setError('')
+            setScreen('warehouse')
+          }}
+        >
+          Warehouse
+        </button>
+        <button
+          type="button"
+          aria-current={screen === 'stock' ? 'page' : undefined}
+          onClick={() => {
+            setError('')
+            setScreen('stock')
+          }}
+        >
+          Stock
+        </button>
+      </nav>
+
+      {screen === 'catalog' ? (
+        <>
+          <h1>Catálogo</h1>
+          <form onSubmit={(event) => void onCreateItem(event)}>
+            <label>
+              SKU
+              <input
+                name="sku"
+                value={sku}
+                onChange={(event) => setSku(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Nome
+              <input
+                name="name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Unidade
+              <input
+                name="unit"
+                value={unit}
+                onChange={(event) => setUnit(event.target.value)}
+                required
+              />
+            </label>
+            <button type="submit">Criar item</button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {items.length === 0 ? (
+            <p>Nenhum item no catálogo.</p>
+          ) : (
+            <ul>
+              {items.map((item) => (
+                <li key={item.id}>
+                  <span>{item.sku}</span>
+                  <span>{item.name}</span>
+                  <span>{item.unit}</span>
+                  <button type="button" onClick={() => void onDeleteItem(item.id)}>
+                    Excluir
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
+
+      {screen === 'warehouse' ? (
+        <>
+          <h1>Warehouse</h1>
+          <form onSubmit={(event) => void onCreateWarehouse(event)}>
+            <label>
+              Name
+              <input
+                name="warehouseName"
+                value={warehouseName}
+                onChange={(event) => setWarehouseName(event.target.value)}
+                required
+              />
+            </label>
+            <button type="submit">Create Warehouse</button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {warehouses.length === 0 ? (
+            <p>No Warehouse yet.</p>
+          ) : (
+            <ul>
+              {warehouses.map((warehouse) => (
+                <li className="warehouse" key={warehouse.id}>
+                  <span>{warehouse.name}</span>
+                  <button type="button" onClick={() => void onDeleteWarehouse(warehouse.id)}>
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
+
+      {screen === 'stock' ? (
+        <>
+          <h1>Stock</h1>
+          <form onSubmit={(event) => void onCreateStock(event)}>
+            <label>
+              Warehouse
+              <select
+                name="warehouseId"
+                value={warehouseId}
+                onChange={(event) => setWarehouseId(event.target.value)}
+                required
+              >
+                <option value="">Select Warehouse</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Item
+              <select
+                name="itemId"
+                value={itemId}
+                onChange={(event) => setItemId(event.target.value)}
+                required
+              >
+                <option value="">Select Item</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input
+                name="quantity"
+                type="number"
+                min="0"
+                step="any"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+                required
+              />
+            </label>
+            <button type="submit">Create Stock</button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {stock.length === 0 ? (
+            <p>No Stock yet.</p>
+          ) : (
+            <ul>
+              {stock.map((row) => (
+                <li className="stock" key={row.id}>
+                  <span>{warehouseNameOf(row.warehouseId)}</span>
+                  <span>{itemLabelOf(row.itemId)}</span>
+                  <span>
+                    {row.quantity} {itemUnitOf(row.itemId)}
+                  </span>
+                  <button type="button" onClick={() => void onDeleteStock(row.id)}>
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
     </main>
   )
 }

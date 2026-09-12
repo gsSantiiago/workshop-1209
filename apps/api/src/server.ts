@@ -5,6 +5,8 @@ import { registerServices } from './container/service-registration'
 import { registerErrorHandler } from './middleware/error'
 import { healthRoutes } from './routes/health'
 import { itemRoutes } from './routes/items'
+import { stockRoutes } from './routes/stock'
+import { warehouseRoutes } from './routes/warehouses'
 
 export async function createServer() {
   registerServices()
@@ -27,6 +29,8 @@ export async function createServer() {
   await registerErrorHandler(fastify)
   await fastify.register(healthRoutes)
   await fastify.register(itemRoutes)
+  await fastify.register(warehouseRoutes)
+  await fastify.register(stockRoutes)
 
   return fastify
 }

@@ -1,60 +1,58 @@
-import { ItemRepository, type ItemRecord } from '../repositories/item.repository'
+import { StockRepository, type StockRecord } from '../repositories/stock.repository'
 
-export type ItemInput = {
-  sku?: string
-  name?: string
-  unit?: string
+export type StockInput = {
+  warehouseId?: string
+  itemId?: string
+  quantity?: unknown
 }
 
-export class ItemService {
-  constructor(private readonly items: ItemRepository) {}
+export class StockService {
+  constructor(private readonly stock: StockRepository) {}
 
-  list(): Promise<ItemRecord[]> | ItemRecord[] {
-    return this.items.list()
+  list(): Promise<StockRecord[]> | StockRecord[] {
+    return this.stock.list()
   }
 
-  async create(input: ItemInput): Promise<ItemRecord> {
-    const sku = input.sku?.trim() ?? ''
-    const name = input.name?.trim() ?? ''
-    const unit = input.unit?.trim() ?? ''
-    if (!sku || !name || !unit) {
-      throw httpError('sku, name, and unit are required', 400)
+  async create(input: StockInput): Promise<StockRecord> {
+    const warehouseId = input.warehouseId?.trim() ?? ''
+    const itemId = input.itemId?.trim() ?? ''
+    if (!warehouseId || !itemId || !isNonNegativeQuantity(input.quantity)) {
+      throw httpError('warehouseId, itemId, and a non-negative quantity are required', 400)
     }
 
-    const item: ItemRecord = {
+    const row: StockRecord = {
       id: crypto.randomUUID(),
-      sku,
-      name,
-      unit,
+      warehouseId,
+      itemId,
+      quantity: input.quantity,
       createdAt: new Date().toISOString(),
     }
 
     try {
-      await this.items.create(item)
+      await this.stock.create(row)
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw httpError('SKU already exists', 409)
+        throw httpError('Stock already exists', 409)
+      }
+      if (isForeignKeyViolation(error)) {
+        throw httpError('Warehouse or Item not found', 400)
       }
       throw error
     }
 
-    return item
+    return row
   }
 
   async deleteById(id: string): Promise<void> {
-    let deleted: boolean
-    try {
-      deleted = await this.items.deleteById(id)
-    } catch (error) {
-      if (isForeignKeyViolation(error)) {
-        throw httpError('Item has Stock', 409)
-      }
-      throw error
-    }
+    const deleted = await this.stock.deleteById(id)
     if (!deleted) {
-      throw httpError('Item not found', 404)
+      throw httpError('Stock not found', 404)
     }
   }
+}
+
+function isNonNegativeQuantity(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
 }
 
 function httpError(message: string, statusCode: number): Error {

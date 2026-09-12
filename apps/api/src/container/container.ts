@@ -35,6 +35,10 @@ export const tokens = {
   db: 'db',
   itemRepository: 'itemRepository',
   itemService: 'itemService',
+  warehouseRepository: 'warehouseRepository',
+  warehouseService: 'warehouseService',
+  stockRepository: 'stockRepository',
+  stockService: 'stockService',
 } as const
 
 export const container = new Container()
