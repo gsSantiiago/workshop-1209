@@ -106,6 +106,26 @@ describe('JobService', () => {
     expect(jobs.deleteById.calledOnceWith('job-1')).toBe(true)
   })
 
+  function foreignKeyByCode() {
+    return Object.assign(new Error('FOREIGN KEY constraint failed'), {
+      code: 'SQLITE_CONSTRAINT_FOREIGNKEY',
+    })
+  }
+
+  test('deleteById maps a foreign-key error to 409 Job has Movement', async () => {
+    const jobs = sinon.createStubInstance(JobRepository)
+    jobs.deleteById.rejects(foreignKeyByCode())
+    const service = new JobService(jobs)
+
+    try {
+      await service.deleteById('job-1')
+      throw new Error('expected deleteById to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Job has Movement')
+    }
+  })
+
   test('S8 deleteById throws 404 when the repository deletes nothing', async () => {
     const jobs = sinon.createStubInstance(JobRepository)
     jobs.deleteById.resolves(false)

@@ -36,7 +36,15 @@ export class JobService {
   }
 
   async deleteById(id: string): Promise<void> {
-    const deleted = await this.jobs.deleteById(id)
+    let deleted: boolean
+    try {
+      deleted = await this.jobs.deleteById(id)
+    } catch (error) {
+      if (isForeignKeyViolation(error)) {
+        throw httpError('Job has Movement', 409)
+      }
+      throw error
+    }
     if (!deleted) {
       throw httpError('Job not found', 404)
     }
@@ -51,6 +59,14 @@ function httpError(message: string, statusCode: number): Error {
 
 function isUniqueViolation(error: unknown): boolean {
   return constraintFailed(error, 'SQLITE_CONSTRAINT_UNIQUE', 'UNIQUE constraint failed')
+}
+
+function isForeignKeyViolation(error: unknown): boolean {
+  return constraintFailed(
+    error,
+    'SQLITE_CONSTRAINT_FOREIGNKEY',
+    'FOREIGN KEY constraint failed',
+  )
 }
 
 function constraintFailed(error: unknown, code: string, message: string): boolean {

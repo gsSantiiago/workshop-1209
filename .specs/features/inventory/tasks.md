@@ -272,9 +272,9 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Unit test: the delete branch yields 409 `Job has Movement`
-- [ ] Gate check passes: `bun test apps/api/src/services`
-- [ ] Test count: Job unit suite plus the new branch pass
+- [x] Unit test: the delete branch yields 409 `Job has Movement`
+- [x] Gate check passes: `bun test apps/api/src/services`
+- [x] Test count: Job unit suite plus the new branch pass
 
 **Tests**: unit
 **Gate**: quick

@@ -196,7 +196,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-27 | P1: Issue missing Warehouse/Item | T7, T13 | Implementing |
 | INV-28 | P1: Issue missing Job | T7, T13 | Implementing |
 | INV-29 | P1: Operator Issue | T13 | In Tasks |
-| INV-30 | P1: Job delete with Issue | T8, T13 | In Tasks |
+| INV-30 | P1: Job delete with Issue | T8, T13 | Implementing |
 | INV-31 | P1: GET Stock | T14, T16 | In Tasks |
 | INV-32 | P1: POST Stock 404 | T14, T15, T16 | In Tasks |
 | INV-33 | P1: DELETE Stock 404 | T14, T15, T16 | In Tasks |
