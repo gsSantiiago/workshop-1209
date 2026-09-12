@@ -368,8 +368,8 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] `movementRoutes` is registered
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] `movementRoutes` is registered
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build
