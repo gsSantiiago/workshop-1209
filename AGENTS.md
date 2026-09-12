@@ -14,7 +14,6 @@ HTTP: domain under `/api/...`. Health is `GET /health`. Errors: throw `Error` wi
 
 `bun:test` on the API. Obligations add up: a green integration test does not replace the service suite.
 
-
 | Layer            | What it proves                                                                   | How                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Service          | every branch that changes the outcome                                            | unit, `sinon.createStubInstance` of the repository, no IO                                     |
@@ -22,18 +21,17 @@ HTTP: domain under `/api/...`. Health is `GET /health`. Errors: throw `Error` wi
 | Repository alone | nothing                                                                          | no suite of its own                                                                           |
 | Web              | nothing in git                                                                   | Playwright at the end of the change — MCP, not a suite in the repo                            |
 
-
 - Unit stub: `sinon.createStubInstance(ItemRepository)` — then `items.create.resolves()` / `.rejects(err)`; assert `calledOnce`, `notCalled`, `firstCall.args`. Never `new ItemRepository` in the service suite.
-- Unique SKU: the service maps a SQLite unique violation to `409` (unit, stub rejects with that error). The unique *index* is proven by integration. The service does not `findBySku`.
+- Unique SKU: the service maps a SQLite unique violation to `409` (unit, stub rejects with that error). The unique _index_ is proven by integration. The service does not `findBySku`.
 - `container.clear()` before a second `createServer()`. Without it: `Already registered`.
 
+## Linear backlog
 
+Use the team Wald-test for backlog for this project, always follow the tlc-plan task format
 
 ## Screens
 
 A change that touches a screen (UI, layout, styling, routing, client state, rendered data) is unfinished until Playwright has exercised the flow. Use the Playwright MCP against the running web app (`http://localhost:5173`). Click, type, submit, navigate — a first-paint screenshot does not count. Related routes that share the same state must still match. If it fails, fix and run again. Do not add Playwright files to git.
-
-
 
 ## Roadmap
 
