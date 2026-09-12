@@ -422,11 +422,11 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] `create` and `deleteById` are gone
-- [ ] Create/delete unit tests are gone (this is the contract change, not a silent deletion)
-- [ ] `list` unit test still passes
-- [ ] Gate check passes: `bun test apps/api/src/services`
-- [ ] Test count: remaining Stock unit tests pass
+- [x] `create` and `deleteById` are gone
+- [x] Create/delete unit tests are gone (this is the contract change, not a silent deletion)
+- [x] `list` unit test still passes
+- [x] Gate check passes: `bun test apps/api/src/services`
+- [x] Test count: remaining Stock unit tests pass
 
 **Tests**: unit
 **Gate**: quick
