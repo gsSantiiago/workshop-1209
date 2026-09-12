@@ -44,5 +44,20 @@ export function applySchema(sqlite: Database): void {
       created_at TEXT NOT NULL
     );
     CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users (email);
+
+    CREATE TABLE IF NOT EXISTS movements (
+      id TEXT PRIMARY KEY NOT NULL,
+      type TEXT NOT NULL,
+      item_id TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      warehouse_id TEXT NOT NULL,
+      to_warehouse_id TEXT,
+      job_id TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (item_id) REFERENCES items(id),
+      FOREIGN KEY (warehouse_id) REFERENCES warehouses(id),
+      FOREIGN KEY (to_warehouse_id) REFERENCES warehouses(id),
+      FOREIGN KEY (job_id) REFERENCES jobs(id)
+    );
   `)
 }

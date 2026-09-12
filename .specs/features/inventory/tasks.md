@@ -142,8 +142,8 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] SQL columns and FKs match T2
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] SQL columns and FKs match T2
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build
