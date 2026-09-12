@@ -202,10 +202,10 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-33 | P1: DELETE Stock 404 | T14, T15, T16 | Implementing |
 | INV-34 | P1: No Movement delete | T11 | Implementing |
 | INV-35 | P1: Inventory screen forms | T1, T17 | Implementing |
-| INV-36 | P1: Screen Receipt | T17 | In Tasks |
-| INV-37 | P1: Screen Transfer | T17 | In Tasks |
-| INV-38 | P1: Screen Issue | T17 | In Tasks |
-| INV-39 | P1: Stock screen read-only | T17 | In Tasks |
+| INV-36 | P1: Screen Receipt | T17 | Implementing |
+| INV-37 | P1: Screen Transfer | T17 | Implementing |
+| INV-38 | P1: Screen Issue | T17 | Implementing |
+| INV-39 | P1: Stock screen read-only | T17 | Implementing |
 
 **ID format:** `INV-NN`
 

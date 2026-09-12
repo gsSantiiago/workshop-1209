@@ -500,11 +500,11 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Inventory posts Receipt, Transfer, Issue and lists Movements
-- [ ] Stock screen shows balances only
-- [ ] Playwright MCP on `http://localhost:5173` exercises Receipt → Transfer → Issue, then Stock and Job (not a first-paint screenshot)
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
-- [ ] No Playwright files added to git
+- [x] Inventory posts Receipt, Transfer, Issue and lists Movements
+- [x] Stock screen shows balances only
+- [x] Playwright MCP on `http://localhost:5173` exercises Receipt → Transfer → Issue, then Stock and Job (not a first-paint screenshot)
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] No Playwright files added to git
 
 **Tests**: none
 **Gate**: build

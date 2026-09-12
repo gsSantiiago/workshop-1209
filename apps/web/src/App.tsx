@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
-type Screen = 'catalog' | 'warehouse' | 'job' | 'stock' | 'users'
+type Screen = 'catalog' | 'warehouse' | 'job' | 'stock' | 'inventory' | 'users'
 type Role = 'Administrator' | 'Operator'
 
 type User = {
@@ -39,6 +39,17 @@ type Stock = {
   createdAt: string
 }
 
+type Movement = {
+  id: string
+  type: 'receipt' | 'transfer' | 'issue'
+  itemId: string
+  quantity: number
+  warehouseId: string
+  toWarehouseId: string | null
+  jobId: string | null
+  createdAt: string
+}
+
 function App() {
   const [ready, setReady] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -47,6 +58,7 @@ function App() {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
   const [stock, setStock] = useState<Stock[]>([])
+  const [movements, setMovements] = useState<Movement[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
@@ -56,6 +68,14 @@ function App() {
   const [warehouseId, setWarehouseId] = useState('')
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('')
+  const [fromWarehouseId, setFromWarehouseId] = useState('')
+  const [toWarehouseId, setToWarehouseId] = useState('')
+  const [transferItemId, setTransferItemId] = useState('')
+  const [transferQuantity, setTransferQuantity] = useState('')
+  const [issueWarehouseId, setIssueWarehouseId] = useState('')
+  const [issueItemId, setIssueItemId] = useState('')
+  const [issueJobId, setIssueJobId] = useState('')
+  const [issueQuantity, setIssueQuantity] = useState('')
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [userEmail, setUserEmail] = useState('')
@@ -95,6 +115,12 @@ function App() {
     setStock((await response.json()) as Stock[])
   }
 
+  async function refreshMovements() {
+    const response = await request('/api/movements')
+    if (!response.ok) return
+    setMovements((await response.json()) as Movement[])
+  }
+
   async function refreshUsers() {
     const response = await request('/api/users')
     if (!response.ok) return
@@ -107,6 +133,7 @@ function App() {
       refreshWarehouses(),
       refreshJobs(),
       refreshStock(),
+      refreshMovements(),
       refreshUsers(),
     ])
   }
@@ -276,10 +303,10 @@ function App() {
     setError(body.error ?? 'Could not delete Job')
   }
 
-  async function onCreateStock(event: FormEvent<HTMLFormElement>) {
+  async function onCreateReceipt(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    const response = await request('/api/stock', {
+    const response = await request('/api/receipts', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -290,19 +317,55 @@ function App() {
     })
     if (response.status === 201) {
       setQuantity('')
-      await refreshStock()
+      await refreshAll()
       return
     }
     const body = (await response.json()) as { error?: string }
-    setError(body.error ?? 'Could not create Stock')
+    setError(body.error ?? 'Could not post Receipt')
   }
 
-  async function onDeleteStock(id: string) {
+  async function onCreateTransfer(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setError('')
-    const response = await request(`/api/stock/${id}`, { method: 'DELETE' })
-    if (response.status === 204) {
-      await refreshStock()
+    const response = await request('/api/transfers', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        fromWarehouseId,
+        toWarehouseId,
+        itemId: transferItemId,
+        quantity: Number(transferQuantity),
+      }),
+    })
+    if (response.status === 201) {
+      setTransferQuantity('')
+      await refreshAll()
+      return
     }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not post Transfer')
+  }
+
+  async function onCreateIssue(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/issues', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        warehouseId: issueWarehouseId,
+        itemId: issueItemId,
+        jobId: issueJobId,
+        quantity: Number(issueQuantity),
+      }),
+    })
+    if (response.status === 201) {
+      setIssueQuantity('')
+      await refreshAll()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not post Issue')
   }
 
   function warehouseNameOf(id: string) {
@@ -316,6 +379,10 @@ function App() {
 
   function itemUnitOf(id: string) {
     return items.find((row) => row.id === id)?.unit ?? ''
+  }
+
+  function jobNameOf(id: string) {
+    return jobs.find((job) => job.id === id)?.name ?? id
   }
 
   if (!ready) {
@@ -396,6 +463,16 @@ function App() {
           }}
         >
           Stock
+        </button>
+        <button
+          type="button"
+          aria-current={screen === 'inventory' ? 'page' : undefined}
+          onClick={() => {
+            setError('')
+            setScreen('inventory')
+          }}
+        >
+          Inventory
         </button>
         <button
           type="button"
@@ -537,11 +614,34 @@ function App() {
       {screen === 'stock' ? (
         <>
           <h1>Stock</h1>
-          <form onSubmit={(event) => void onCreateStock(event)}>
+          {error ? <p role="alert">{error}</p> : null}
+          {stock.length === 0 ? (
+            <p>No Stock yet.</p>
+          ) : (
+            <ul>
+              {stock.map((row) => (
+                <li className="stock" key={row.id}>
+                  <span>{warehouseNameOf(row.warehouseId)}</span>
+                  <span>{itemLabelOf(row.itemId)}</span>
+                  <span>
+                    {row.quantity} {itemUnitOf(row.itemId)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
+
+      {screen === 'inventory' ? (
+        <>
+          <h1>Inventory</h1>
+          <form onSubmit={(event) => void onCreateReceipt(event)}>
+            <h2>Receipt</h2>
             <label>
               Warehouse
               <select
-                name="warehouseId"
+                name="receiptWarehouseId"
                 value={warehouseId}
                 onChange={(event) => setWarehouseId(event.target.value)}
                 required
@@ -557,7 +657,7 @@ function App() {
             <label>
               Item
               <select
-                name="itemId"
+                name="receiptItemId"
                 value={itemId}
                 onChange={(event) => setItemId(event.target.value)}
                 required
@@ -573,7 +673,7 @@ function App() {
             <label>
               Quantity
               <input
-                name="quantity"
+                name="receiptQuantity"
                 type="number"
                 min="0"
                 step="any"
@@ -582,23 +682,156 @@ function App() {
                 required
               />
             </label>
-            <button type="submit">Create Stock</button>
+            <button type="submit">Post Receipt</button>
+          </form>
+          <form onSubmit={(event) => void onCreateTransfer(event)}>
+            <h2>Transfer</h2>
+            <label>
+              From Warehouse
+              <select
+                name="fromWarehouseId"
+                value={fromWarehouseId}
+                onChange={(event) => setFromWarehouseId(event.target.value)}
+                required
+              >
+                <option value="">Select Warehouse</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              To Warehouse
+              <select
+                name="toWarehouseId"
+                value={toWarehouseId}
+                onChange={(event) => setToWarehouseId(event.target.value)}
+                required
+              >
+                <option value="">Select Warehouse</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Item
+              <select
+                name="transferItemId"
+                value={transferItemId}
+                onChange={(event) => setTransferItemId(event.target.value)}
+                required
+              >
+                <option value="">Select Item</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input
+                name="transferQuantity"
+                type="number"
+                min="0"
+                step="any"
+                value={transferQuantity}
+                onChange={(event) => setTransferQuantity(event.target.value)}
+                required
+              />
+            </label>
+            <button type="submit">Post Transfer</button>
+          </form>
+          <form onSubmit={(event) => void onCreateIssue(event)}>
+            <h2>Issue</h2>
+            <label>
+              Warehouse
+              <select
+                name="issueWarehouseId"
+                value={issueWarehouseId}
+                onChange={(event) => setIssueWarehouseId(event.target.value)}
+                required
+              >
+                <option value="">Select Warehouse</option>
+                {warehouses.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Item
+              <select
+                name="issueItemId"
+                value={issueItemId}
+                onChange={(event) => setIssueItemId(event.target.value)}
+                required
+              >
+                <option value="">Select Item</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Job
+              <select
+                name="issueJobId"
+                value={issueJobId}
+                onChange={(event) => setIssueJobId(event.target.value)}
+                required
+              >
+                <option value="">Select Job</option>
+                {jobs.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input
+                name="issueQuantity"
+                type="number"
+                min="0"
+                step="any"
+                value={issueQuantity}
+                onChange={(event) => setIssueQuantity(event.target.value)}
+                required
+              />
+            </label>
+            <button type="submit">Post Issue</button>
           </form>
           {error ? <p role="alert">{error}</p> : null}
-          {stock.length === 0 ? (
-            <p>No Stock yet.</p>
+          {movements.length === 0 ? (
+            <p>No Movement yet.</p>
           ) : (
             <ul>
-              {stock.map((row) => (
-                <li className="stock" key={row.id}>
-                  <span>{warehouseNameOf(row.warehouseId)}</span>
-                  <span>{itemLabelOf(row.itemId)}</span>
+              {movements.map((movement) => (
+                <li className="movement" key={movement.id}>
+                  <span>{movement.type}</span>
+                  <span>{itemLabelOf(movement.itemId)}</span>
                   <span>
-                    {row.quantity} {itemUnitOf(row.itemId)}
+                    {movement.quantity} {itemUnitOf(movement.itemId)}
                   </span>
-                  <button type="button" onClick={() => void onDeleteStock(row.id)}>
-                    Delete
-                  </button>
+                  <span>{warehouseNameOf(movement.warehouseId)}</span>
+                  <span>
+                    {movement.toWarehouseId
+                      ? warehouseNameOf(movement.toWarehouseId)
+                      : movement.jobId
+                        ? jobNameOf(movement.jobId)
+                        : ''}
+                  </span>
                 </li>
               ))}
             </ul>
