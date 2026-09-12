@@ -560,4 +560,32 @@ describe('movements HTTP', () => {
     })
     expect(issue.statusCode).toBe(201)
   })
+
+  test('DELETE and PATCH /api/movements are 404 and leave Movements unchanged', async () => {
+    const { item, warehouseA } = await seedRefs()
+    const created = await request({
+      method: 'POST',
+      url: '/api/receipts',
+      payload: { warehouseId: warehouseA.id, itemId: item.id, quantity: 12.5 },
+    })
+    const { id } = created.json() as { id: string }
+
+    const deleted = await request({ method: 'DELETE', url: `/api/movements/${id}` })
+    expect(deleted.statusCode).toBe(404)
+
+    const patched = await request({
+      method: 'PATCH',
+      url: `/api/movements/${id}`,
+      payload: { quantity: 1 },
+    })
+    expect(patched.statusCode).toBe(404)
+
+    const list = (await request({ method: 'GET', url: '/api/movements' })).json() as {
+      id: string
+      quantity: number
+    }[]
+    expect(list).toHaveLength(1)
+    expect(list[0]?.id).toBe(id)
+    expect(list[0]?.quantity).toBe(12.5)
+  })
 })

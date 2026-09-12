@@ -534,6 +534,31 @@ T17 -> T18
 
 ---
 
+### T19: Assert Movement has no delete or update route
+
+**What**: Prove DELETE and PATCH `/api/movements/:id` are 404 and leave the Movement in place (INV-34).
+**Where**: `apps/api/test/movements.integration.test.ts`
+**Depends on**: T18
+**Reuses**: T13 Receipt POST
+**Requirement**: INV-34
+
+**Tools**:
+
+- MCP: NONE
+- Skill: `tlc-spec-driven`
+
+**Done when**:
+
+- [x] DELETE `/api/movements/:id` is `404` and the Movement remains
+- [x] PATCH `/api/movements/:id` is `404` and quantity is unchanged
+- [x] Gate check passes: `bun test apps/api`
+- [x] Test count: movements integration suite plus the new case pass
+
+**Tests**: integration
+**Gate**: full
+
+---
+
 ## Phase Execution Map
 
 ```
@@ -543,10 +568,10 @@ Phase 1:  T1 -> T2 -> T3 -> T4
 Phase 2:  T5 -> T6 -> T7 -> T8
 Phase 3:  T9 -> T10 -> T11 -> T12 -> T13
 Phase 4:  T14 -> T15 -> T16
-Phase 5:  T17 -> T18
+Phase 5:  T17 -> T18 -> T19
 ```
 
-Execution is strictly sequential. 18 tasks pack into three batches of whole phases (4+4, 5, 3+2). Execute offers sub-agents; do not auto-spawn.
+Execution is strictly sequential. T19 is the INV-34 verifier fix.
 
 ---
 
@@ -572,8 +597,9 @@ Execution is strictly sequential. 18 tasks pack into three batches of whole phas
 | T16: warehouse-stock tests | 1 file | Granular |
 | T17: Inventory + Stock UI | 1 file | Granular |
 | T18: ROADMAP | 1 file | Granular |
+| T19: Movement no-delete HTTP | 1 file | Granular |
 
-**Granularity check**: each task is one file or one function. T5/T6/T7 colocate unit tests per AGENTS. T17 is one screen file on purpose.
+**Granularity check**: each task is one file or one function. T5/T6/T7 colocate unit tests per AGENTS. T17 is one screen file on purpose. T19 is the INV-34 assertion.
 
 ---
 
@@ -599,6 +625,7 @@ Execution is strictly sequential. 18 tasks pack into three batches of whole phas
 | T16 | T15 | T15 -> T16 | Match |
 | T17 | T16 | (cross-phase) | Match |
 | T18 | T17 | T17 -> T18 | Match |
+| T19 | T18 | T18 -> T19 | Match |
 
 ---
 
@@ -624,5 +651,6 @@ Execution is strictly sequential. 18 tasks pack into three batches of whole phas
 | T16 | Route + DB | integration | integration | OK |
 | T17 | Web | none in git | none | OK |
 | T18 | Docs | none | none | OK |
+| T19 | Route + DB | integration | integration | OK |
 
-T11/T12 stay untested alone; T13 is the merge-forward integration for those routes. INV-30 unit is T8; INV-30 HTTP is T13.
+T11/T12 stay untested alone; T13 is the merge-forward integration for those routes. INV-30 unit is T8; INV-30 HTTP is T13. INV-34 HTTP is T19.
