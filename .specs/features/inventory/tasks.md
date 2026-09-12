@@ -321,8 +321,8 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] MovementService is constructed with MovementRepository
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] MovementService is constructed with MovementRepository
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build
