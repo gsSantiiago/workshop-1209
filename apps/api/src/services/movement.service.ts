@@ -83,6 +83,14 @@ export class MovementService {
       throw httpError('fromWarehouseId and toWarehouseId must differ', 400)
     }
 
+    if (
+      !(await this.movements.existsWarehouse(fromWarehouseId)) ||
+      !(await this.movements.existsWarehouse(toWarehouseId)) ||
+      !(await this.movements.existsItem(itemId))
+    ) {
+      throw httpError('Warehouse or Item not found', 400)
+    }
+
     const source = await this.movements.findStock(fromWarehouseId, itemId)
     if (!source || source.quantity < input.quantity) {
       throw httpError('Insufficient Stock', 400)

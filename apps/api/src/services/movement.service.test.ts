@@ -154,8 +154,14 @@ describe('MovementService', () => {
     quantity: 3,
   }
 
+  function stubTransferRefs(movements: sinon.SinonStubbedInstance<MovementRepository>) {
+    movements.existsWarehouse.resolves(true)
+    movements.existsItem.resolves(true)
+  }
+
   test('createTransfer persists a transfer Movement with UUID id and ISO-8601 createdAt', async () => {
     const movements = sinon.createStubInstance(MovementRepository)
+    stubTransferRefs(movements)
     movements.findStock.onFirstCall().resolves({
       id: 'stock-a',
       warehouseId: 'warehouse-a',
@@ -189,6 +195,7 @@ describe('MovementService', () => {
 
   test('createTransfer subtracts source Stock and adds destination Stock', async () => {
     const movements = sinon.createStubInstance(MovementRepository)
+    stubTransferRefs(movements)
     movements.findStock.onFirstCall().resolves({
       id: 'stock-a',
       warehouseId: 'warehouse-a',
@@ -216,6 +223,7 @@ describe('MovementService', () => {
 
   test('createTransfer creates destination Stock at 3 when it is missing', async () => {
     const movements = sinon.createStubInstance(MovementRepository)
+    stubTransferRefs(movements)
     movements.findStock.onFirstCall().resolves({
       id: 'stock-a',
       warehouseId: 'warehouse-a',
@@ -246,6 +254,7 @@ describe('MovementService', () => {
 
     for (const source of sources) {
       const movements = sinon.createStubInstance(MovementRepository)
+      stubTransferRefs(movements)
       movements.findStock.resolves(source)
       const service = new MovementService(movements)
 
@@ -334,6 +343,7 @@ describe('MovementService', () => {
 
   test('createTransfer maps a foreign-key error to 400 Warehouse or Item not found', async () => {
     const movements = sinon.createStubInstance(MovementRepository)
+    stubTransferRefs(movements)
     movements.findStock.onFirstCall().resolves({
       id: 'stock-a',
       warehouseId: 'warehouse-a',
@@ -356,6 +366,7 @@ describe('MovementService', () => {
 
   test('createTransfer equal to source Stock leaves source at 0', async () => {
     const movements = sinon.createStubInstance(MovementRepository)
+    stubTransferRefs(movements)
     movements.findStock.onFirstCall().resolves({
       id: 'stock-a',
       warehouseId: 'warehouse-a',

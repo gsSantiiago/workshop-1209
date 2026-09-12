@@ -391,14 +391,14 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Empty list `200 []`; each POST `201`; validation `400` with spec messages
-- [ ] Insufficient Transfer/Issue leaves Stock unchanged
-- [ ] Transfer equal to source leaves source at `0`; Issue to `0` keeps the row
-- [ ] Unauthenticated POST is `401`; Operator can post all three
-- [ ] DELETE Job after Issue is `409` `Job has Movement`
-- [ ] `container.clear()` before `createServer()`
-- [ ] Gate check passes: `bun test apps/api`
-- [ ] Test count: 20+ integration tests pass (no silent deletions)
+- [x] Empty list `200 []`; each POST `201`; validation `400` with spec messages
+- [x] Insufficient Transfer/Issue leaves Stock unchanged
+- [x] Transfer equal to source leaves source at `0`; Issue to `0` keeps the row
+- [x] Unauthenticated POST is `401`; Operator can post all three
+- [x] DELETE Job after Issue is `409` `Job has Movement`
+- [x] `container.clear()` before `createServer()`
+- [x] Gate check passes: `bun test apps/api`
+- [x] Test count: 20+ integration tests pass (no silent deletions)
 
 **Tests**: integration
 **Gate**: full
