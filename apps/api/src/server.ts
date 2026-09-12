@@ -12,6 +12,7 @@ import { registerErrorHandler } from './middleware/error'
 import { authRoutes } from './routes/auth'
 import { healthRoutes } from './routes/health'
 import { itemRoutes } from './routes/items'
+import { jobRoutes } from './routes/jobs'
 import { stockRoutes } from './routes/stock'
 import { userRoutes } from './routes/users'
 import { warehouseRoutes } from './routes/warehouses'
@@ -54,6 +55,7 @@ export async function createServer() {
   await fastify.register(userRoutes)
   await fastify.register(itemRoutes)
   await fastify.register(warehouseRoutes)
+  await fastify.register(jobRoutes)
   await fastify.register(stockRoutes)
 
   return fastify

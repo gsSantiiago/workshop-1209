@@ -18,6 +18,13 @@ export function applySchema(sqlite: Database): void {
     );
     CREATE UNIQUE INDEX IF NOT EXISTS warehouses_name_unique ON warehouses (name);
 
+    CREATE TABLE IF NOT EXISTS jobs (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS jobs_name_unique ON jobs (name);
+
     CREATE TABLE IF NOT EXISTS stock (
       id TEXT PRIMARY KEY NOT NULL,
       warehouse_id TEXT NOT NULL,

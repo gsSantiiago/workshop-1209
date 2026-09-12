@@ -60,7 +60,8 @@ li {
   align-items: center;
 }
 
-li.warehouse {
+li.warehouse,
+li.job {
   grid-template-columns: 1fr auto;
 }
 

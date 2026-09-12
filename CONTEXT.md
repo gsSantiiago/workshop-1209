@@ -35,3 +35,7 @@ _Avoid_: account, usuário, login (as an entity)
 **Role**:
 Administrator or Operator. A User has one Role.
 _Avoid_: permission, perfil, group
+
+**Job**:
+The work site. Not a Warehouse. Quantity does not belong here.
+_Avoid_: obra, canteiro, project, site, Warehouse (as this place)

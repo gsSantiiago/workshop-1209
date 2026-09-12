@@ -1,9 +1,11 @@
 import { createDb } from '../db/client'
 import { ItemRepository } from '../repositories/item.repository'
+import { JobRepository } from '../repositories/job.repository'
 import { StockRepository } from '../repositories/stock.repository'
 import { UserRepository } from '../repositories/user.repository'
 import { WarehouseRepository } from '../repositories/warehouse.repository'
 import { ItemService } from '../services/item.service'
+import { JobService } from '../services/job.service'
 import { StockService } from '../services/stock.service'
 import { UserService } from '../services/user.service'
 import { WarehouseService } from '../services/warehouse.service'
@@ -26,6 +28,14 @@ export function registerServices(): void {
   container.register(
     tokens.warehouseService,
     (c) => new WarehouseService(c.get(tokens.warehouseRepository)),
+  )
+  container.register(
+    tokens.jobRepository,
+    (c) => new JobRepository(c.get(tokens.db)),
+  )
+  container.register(
+    tokens.jobService,
+    (c) => new JobService(c.get(tokens.jobRepository)),
   )
   container.register(
     tokens.stockRepository,

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
-type Screen = 'catalog' | 'warehouse' | 'stock' | 'users'
+type Screen = 'catalog' | 'warehouse' | 'job' | 'stock' | 'users'
 type Role = 'Administrator' | 'Operator'
 
 type User = {
@@ -25,6 +25,12 @@ type Warehouse = {
   createdAt: string
 }
 
+type Job = {
+  id: string
+  name: string
+  createdAt: string
+}
+
 type Stock = {
   id: string
   warehouseId: string
@@ -39,12 +45,14 @@ function App() {
   const [screen, setScreen] = useState<Screen>('catalog')
   const [items, setItems] = useState<Item[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
   const [stock, setStock] = useState<Stock[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('')
   const [warehouseName, setWarehouseName] = useState('')
+  const [jobName, setJobName] = useState('')
   const [warehouseId, setWarehouseId] = useState('')
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('')
@@ -75,6 +83,12 @@ function App() {
     setWarehouses((await response.json()) as Warehouse[])
   }
 
+  async function refreshJobs() {
+    const response = await request('/api/jobs')
+    if (!response.ok) return
+    setJobs((await response.json()) as Job[])
+  }
+
   async function refreshStock() {
     const response = await request('/api/stock')
     if (!response.ok) return
@@ -88,7 +102,13 @@ function App() {
   }
 
   async function refreshAll() {
-    await Promise.all([refreshItems(), refreshWarehouses(), refreshStock(), refreshUsers()])
+    await Promise.all([
+      refreshItems(),
+      refreshWarehouses(),
+      refreshJobs(),
+      refreshStock(),
+      refreshUsers(),
+    ])
   }
 
   useEffect(() => {
@@ -228,6 +248,34 @@ function App() {
     setError(body.error ?? 'Could not delete Warehouse')
   }
 
+  async function onCreateJob(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/jobs', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: jobName }),
+    })
+    if (response.status === 201) {
+      setJobName('')
+      await refreshJobs()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Job')
+  }
+
+  async function onDeleteJob(id: string) {
+    setError('')
+    const response = await request(`/api/jobs/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshJobs()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete Job')
+  }
+
   async function onCreateStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
@@ -328,6 +376,16 @@ function App() {
           }}
         >
           Warehouse
+        </button>
+        <button
+          type="button"
+          aria-current={screen === 'job' ? 'page' : undefined}
+          onClick={() => {
+            setError('')
+            setScreen('job')
+          }}
+        >
+          Job
         </button>
         <button
           type="button"
@@ -434,6 +492,39 @@ function App() {
                 <li className="warehouse" key={warehouse.id}>
                   <span>{warehouse.name}</span>
                   <button type="button" onClick={() => void onDeleteWarehouse(warehouse.id)}>
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
+
+      {screen === 'job' ? (
+        <>
+          <h1>Job</h1>
+          <form onSubmit={(event) => void onCreateJob(event)}>
+            <label>
+              Name
+              <input
+                name="jobName"
+                value={jobName}
+                onChange={(event) => setJobName(event.target.value)}
+                required
+              />
+            </label>
+            <button type="submit">Create Job</button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {jobs.length === 0 ? (
+            <p>No Job yet.</p>
+          ) : (
+            <ul>
+              {jobs.map((job) => (
+                <li className="job" key={job.id}>
+                  <span>{job.name}</span>
+                  <button type="button" onClick={() => void onDeleteJob(job.id)}>
                     Delete
                   </button>
                 </li>

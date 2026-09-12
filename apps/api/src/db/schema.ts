@@ -14,6 +14,12 @@ export const warehouses = sqliteTable('warehouses', {
   createdAt: text('created_at').notNull(),
 })
 
+export const jobs = sqliteTable('jobs', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  createdAt: text('created_at').notNull(),
+})
+
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),

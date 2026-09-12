@@ -37,6 +37,8 @@ export const tokens = {
   itemService: 'itemService',
   warehouseRepository: 'warehouseRepository',
   warehouseService: 'warehouseService',
+  jobRepository: 'jobRepository',
+  jobService: 'jobService',
   stockRepository: 'stockRepository',
   stockService: 'stockService',
   userRepository: 'userRepository',
