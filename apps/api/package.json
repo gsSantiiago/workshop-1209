@@ -12,7 +12,9 @@
     "db:studio": "bunx drizzle-kit studio"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
+    "@fastify/session": "^11.1.2",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.12.3",
     "pino-pretty": "^13.1.3"

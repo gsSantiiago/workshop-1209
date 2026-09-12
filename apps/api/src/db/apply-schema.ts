@@ -28,5 +28,14 @@ export function applySchema(sqlite: Database): void {
       FOREIGN KEY (item_id) REFERENCES items(id)
     );
     CREATE UNIQUE INDEX IF NOT EXISTS stock_warehouse_item_unique ON stock (warehouse_id, item_id);
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY NOT NULL,
+      email TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS users_email_unique ON users (email);
   `)
 }

@@ -1,7 +1,15 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
-type Screen = 'catalog' | 'warehouse' | 'stock'
+type Screen = 'catalog' | 'warehouse' | 'stock' | 'users'
+type Role = 'Administrator' | 'Operator'
+
+type User = {
+  id: string
+  email: string
+  role: Role
+  createdAt: string
+}
 
 type Item = {
   id: string
@@ -26,10 +34,13 @@ type Stock = {
 }
 
 function App() {
+  const [ready, setReady] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [screen, setScreen] = useState<Screen>('catalog')
   const [items, setItems] = useState<Item[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [stock, setStock] = useState<Stock[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
   const [unit, setUnit] = useState('')
@@ -37,32 +48,58 @@ function App() {
   const [warehouseId, setWarehouseId] = useState('')
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('')
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [userEmail, setUserEmail] = useState('')
+  const [userPassword, setUserPassword] = useState('')
+  const [userRole, setUserRole] = useState<Role>('Operator')
   const [error, setError] = useState('')
 
+  async function request(url: string, init?: RequestInit) {
+    const response = await fetch(url, { ...init, credentials: 'include' })
+    if (response.status === 401) {
+      setCurrentUser(null)
+    }
+    return response
+  }
+
   async function refreshItems() {
-    const response = await fetch('/api/items')
+    const response = await request('/api/items')
     if (!response.ok) return
     setItems((await response.json()) as Item[])
   }
 
   async function refreshWarehouses() {
-    const response = await fetch('/api/warehouses')
+    const response = await request('/api/warehouses')
     if (!response.ok) return
     setWarehouses((await response.json()) as Warehouse[])
   }
 
   async function refreshStock() {
-    const response = await fetch('/api/stock')
+    const response = await request('/api/stock')
     if (!response.ok) return
     setStock((await response.json()) as Stock[])
   }
 
+  async function refreshUsers() {
+    const response = await request('/api/users')
+    if (!response.ok) return
+    setUsers((await response.json()) as User[])
+  }
+
   async function refreshAll() {
-    await Promise.all([refreshItems(), refreshWarehouses(), refreshStock()])
+    await Promise.all([refreshItems(), refreshWarehouses(), refreshStock(), refreshUsers()])
   }
 
   useEffect(() => {
-    void refreshAll()
+    void (async () => {
+      const response = await request('/api/me')
+      if (response.ok) {
+        setCurrentUser((await response.json()) as User)
+        await refreshAll()
+      }
+      setReady(true)
+    })()
   }, [])
 
   useEffect(() => {
@@ -77,10 +114,66 @@ function App() {
     }
   }, [itemId, items])
 
+  async function onLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: loginEmail, password: loginPassword }),
+    })
+    if (response.ok) {
+      setCurrentUser((await response.json()) as User)
+      setLoginEmail('')
+      setLoginPassword('')
+      await refreshAll()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not sign in')
+  }
+
+  async function onLogout() {
+    setError('')
+    await request('/api/logout', { method: 'POST' })
+    setCurrentUser(null)
+    setScreen('catalog')
+  }
+
+  async function onCreateUser(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/users', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email: userEmail, password: userPassword, role: userRole }),
+    })
+    if (response.status === 201) {
+      setUserEmail('')
+      setUserPassword('')
+      setUserRole('Operator')
+      await refreshUsers()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create User')
+  }
+
+  async function onDeleteUser(id: string) {
+    setError('')
+    const response = await request(`/api/users/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshUsers()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete User')
+  }
+
   async function onCreateItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    const response = await fetch('/api/items', {
+    const response = await request('/api/items', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ sku, name, unit }),
@@ -98,7 +191,7 @@ function App() {
 
   async function onDeleteItem(id: string) {
     setError('')
-    const response = await fetch(`/api/items/${id}`, { method: 'DELETE' })
+    const response = await request(`/api/items/${id}`, { method: 'DELETE' })
     if (response.status === 204) {
       await refreshAll()
       return
@@ -110,7 +203,7 @@ function App() {
   async function onCreateWarehouse(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    const response = await fetch('/api/warehouses', {
+    const response = await request('/api/warehouses', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name: warehouseName }),
@@ -126,7 +219,7 @@ function App() {
 
   async function onDeleteWarehouse(id: string) {
     setError('')
-    const response = await fetch(`/api/warehouses/${id}`, { method: 'DELETE' })
+    const response = await request(`/api/warehouses/${id}`, { method: 'DELETE' })
     if (response.status === 204) {
       await refreshAll()
       return
@@ -138,7 +231,7 @@ function App() {
   async function onCreateStock(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    const response = await fetch('/api/stock', {
+    const response = await request('/api/stock', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -158,7 +251,7 @@ function App() {
 
   async function onDeleteStock(id: string) {
     setError('')
-    const response = await fetch(`/api/stock/${id}`, { method: 'DELETE' })
+    const response = await request(`/api/stock/${id}`, { method: 'DELETE' })
     if (response.status === 204) {
       await refreshStock()
     }
@@ -175,6 +268,42 @@ function App() {
 
   function itemUnitOf(id: string) {
     return items.find((row) => row.id === id)?.unit ?? ''
+  }
+
+  if (!ready) {
+    return null
+  }
+
+  if (!currentUser) {
+    return (
+      <main>
+        <h1>Sign in</h1>
+        <form onSubmit={(event) => void onLogin(event)}>
+          <label>
+            Email
+            <input
+              name="email"
+              type="email"
+              value={loginEmail}
+              onChange={(event) => setLoginEmail(event.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Password
+            <input
+              name="password"
+              type="password"
+              value={loginPassword}
+              onChange={(event) => setLoginPassword(event.target.value)}
+              required
+            />
+          </label>
+          <button type="submit">Sign in</button>
+        </form>
+        {error ? <p role="alert">{error}</p> : null}
+      </main>
+    )
   }
 
   return (
@@ -210,6 +339,22 @@ function App() {
         >
           Stock
         </button>
+        <button
+          type="button"
+          aria-current={screen === 'users' ? 'page' : undefined}
+          onClick={() => {
+            setError('')
+            setScreen('users')
+          }}
+        >
+          Users
+        </button>
+        <div className="session">
+          <span>{currentUser.email}</span>
+          <button type="button" onClick={() => void onLogout()}>
+            Logout
+          </button>
+        </div>
       </nav>
 
       {screen === 'catalog' ? (
@@ -361,6 +506,63 @@ function App() {
                     {row.quantity} {itemUnitOf(row.itemId)}
                   </span>
                   <button type="button" onClick={() => void onDeleteStock(row.id)}>
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
+
+      {screen === 'users' ? (
+        <>
+          <h1>Users</h1>
+          <form onSubmit={(event) => void onCreateUser(event)}>
+            <label>
+              Email
+              <input
+                name="email"
+                type="email"
+                value={userEmail}
+                onChange={(event) => setUserEmail(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Password
+              <input
+                name="password"
+                type="password"
+                value={userPassword}
+                onChange={(event) => setUserPassword(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Role
+              <select
+                name="role"
+                value={userRole}
+                onChange={(event) => setUserRole(event.target.value as Role)}
+                required
+              >
+                <option value="Operator">Operator</option>
+                <option value="Administrator">Administrator</option>
+              </select>
+            </label>
+            <button type="submit">Create User</button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {users.length === 0 ? (
+            <p>No User yet.</p>
+          ) : (
+            <ul>
+              {users.map((user) => (
+                <li className="user" key={user.id}>
+                  <span>{user.email}</span>
+                  <span>{user.role}</span>
+                  <button type="button" onClick={() => void onDeleteUser(user.id)}>
                     Delete
                   </button>
                 </li>

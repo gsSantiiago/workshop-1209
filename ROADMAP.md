@@ -8,12 +8,9 @@ Language lives in `CONTEXT.md`. Terms below that are not in the glossary yet are
 
 - **Catalog** — Item, SKU, Unit. No quantity.
 - **Warehouse and Stock** — Quantity of an Item in a Warehouse. Catalog stays without balance.
+- **Identity** — User and Role: Administrator, Operator.
 
 ## Phases
-
-### 2. Identity
-
-User and Role: Administrator, Operator.
 
 ### 3. Job
 

@@ -17,4 +17,7 @@ export const config = {
   get NODE_ENV() {
     return Bun.env.NODE_ENV ?? 'development'
   },
+  get SESSION_SECRET() {
+    return Bun.env.SESSION_SECRET ?? 'classroom-dev-session-secret-key!'
+  },
 }

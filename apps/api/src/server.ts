@@ -1,15 +1,25 @@
+import cookie from '@fastify/cookie'
 import cors from '@fastify/cors'
+import session from '@fastify/session'
 import Fastify from 'fastify'
 import { config } from './config/env'
+import { container, tokens } from './container/container'
 import { registerServices } from './container/service-registration'
+import type { AppDatabase } from './db/client'
+import { seedAdministratorIfEmpty } from './db/seed'
+import { registerAuth } from './middleware/auth'
 import { registerErrorHandler } from './middleware/error'
+import { authRoutes } from './routes/auth'
 import { healthRoutes } from './routes/health'
 import { itemRoutes } from './routes/items'
 import { stockRoutes } from './routes/stock'
+import { userRoutes } from './routes/users'
 import { warehouseRoutes } from './routes/warehouses'
+import './types/session'
 
 export async function createServer() {
   registerServices()
+  await seedAdministratorIfEmpty(container.get<AppDatabase>(tokens.db))
 
   const fastify = Fastify({
     logger: {
@@ -25,9 +35,23 @@ export async function createServer() {
     origin: config.CORS_ORIGIN,
     credentials: true,
   })
+  await fastify.register(cookie)
+  await fastify.register(session, {
+    secret: config.SESSION_SECRET,
+    cookieName: 'sessionId',
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+      secure: false,
+    },
+  })
 
   await registerErrorHandler(fastify)
+  await registerAuth(fastify)
   await fastify.register(healthRoutes)
+  await fastify.register(authRoutes)
+  await fastify.register(userRoutes)
   await fastify.register(itemRoutes)
   await fastify.register(warehouseRoutes)
   await fastify.register(stockRoutes)

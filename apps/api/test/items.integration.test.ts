@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { Database } from 'bun:sqlite'
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test'
 import { getTableConfig } from 'drizzle-orm/sqlite-core'
+import { login } from './login'
 
 const dbDir = mkdtempSync(join(tmpdir(), 'fake-erp-items-'))
 const dbFile = join(dbDir, 'test.sqlite')
@@ -21,11 +22,20 @@ const payload = { sku: 'CEM-50', name: 'Cimento CP-II', unit: 'saco' }
 
 describe('items HTTP', () => {
   let app: Awaited<ReturnType<typeof createServer>>
+  let cookie = ''
 
   beforeAll(async () => {
     container.clear()
     app = await createServer()
+    cookie = (await login(app)).cookie
   })
+
+  function request(opts: { method: string; url: string; payload?: unknown }) {
+    return app.inject({
+      ...opts,
+      headers: { cookie },
+    })
+  }
 
   beforeEach(async () => {
     const sqlite = new Database(dbFile)
@@ -39,7 +49,7 @@ describe('items HTTP', () => {
   })
 
   test('GET /api/items on empty table returns 200 []', async () => {
-    const response = await app.inject({ method: 'GET', url: '/api/items' })
+    const response = await request({ method: 'GET', url: '/api/items' })
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual([])
   })
@@ -51,7 +61,7 @@ describe('items HTTP', () => {
   })
 
   test('POST /api/items creates Item without quantity', async () => {
-    const response = await app.inject({
+    const response = await request({
       method: 'POST',
       url: '/api/items',
       payload,
@@ -68,13 +78,13 @@ describe('items HTTP', () => {
   })
 
   test('GET /api/items contains the created Item without quantity', async () => {
-    const created = await app.inject({
+    const created = await request({
       method: 'POST',
       url: '/api/items',
       payload,
     })
     const item = created.json() as Record<string, unknown>
-    const response = await app.inject({ method: 'GET', url: '/api/items' })
+    const response = await request({ method: 'GET', url: '/api/items' })
     expect(response.statusCode).toBe(200)
     const list = response.json() as Record<string, unknown>[]
     expect(list).toHaveLength(1)
@@ -87,7 +97,7 @@ describe('items HTTP', () => {
   })
 
   test('POST /api/items trims sku, name, and unit', async () => {
-    const response = await app.inject({
+    const response = await request({
       method: 'POST',
       url: '/api/items',
       payload: {
@@ -140,7 +150,7 @@ describe('items HTTP', () => {
       sqlite.exec('DELETE FROM items')
       sqlite.close()
 
-      const response = await app.inject({
+      const response = await request({
         method: 'POST',
         url: '/api/items',
         payload: input,
@@ -151,21 +161,21 @@ describe('items HTTP', () => {
         statusCode: 400,
       })
 
-      const list = await app.inject({ method: 'GET', url: '/api/items' })
+      const list = await request({ method: 'GET', url: '/api/items' })
       expect(list.statusCode).toBe(200)
       expect(list.json()).toEqual([])
     }
   })
 
   test('POST /api/items duplicate sku returns 409 and keeps one row', async () => {
-    const first = await app.inject({
+    const first = await request({
       method: 'POST',
       url: '/api/items',
       payload,
     })
     expect(first.statusCode).toBe(201)
 
-    const second = await app.inject({
+    const second = await request({
       method: 'POST',
       url: '/api/items',
       payload,
@@ -176,60 +186,60 @@ describe('items HTTP', () => {
       statusCode: 409,
     })
 
-    const list = await app.inject({ method: 'GET', url: '/api/items' })
+    const list = await request({ method: 'GET', url: '/api/items' })
     const rows = list.json() as { sku: string }[]
     expect(rows.filter((row) => row.sku === 'CEM-50')).toHaveLength(1)
   })
 
   test('POST /api/items concurrent duplicate sku returns 201 and 409 with one row', async () => {
     const [first, second] = await Promise.all([
-      app.inject({ method: 'POST', url: '/api/items', payload }),
-      app.inject({ method: 'POST', url: '/api/items', payload }),
+      request({ method: 'POST', url: '/api/items', payload }),
+      request({ method: 'POST', url: '/api/items', payload }),
     ])
     expect([first.statusCode, second.statusCode].sort()).toEqual([201, 409])
 
-    const list = await app.inject({ method: 'GET', url: '/api/items' })
+    const list = await request({ method: 'GET', url: '/api/items' })
     const rows = list.json() as { sku: string }[]
     expect(rows.filter((row) => row.sku === 'CEM-50')).toHaveLength(1)
   })
 
   test('POST /api/items treats ABC and abc as distinct skus', async () => {
-    const upper = await app.inject({
+    const upper = await request({
       method: 'POST',
       url: '/api/items',
       payload: { sku: 'ABC', name: 'Upper', unit: 'un' },
     })
     expect(upper.statusCode).toBe(201)
 
-    const lower = await app.inject({
+    const lower = await request({
       method: 'POST',
       url: '/api/items',
       payload: { sku: 'abc', name: 'Lower', unit: 'un' },
     })
     expect(lower.statusCode).toBe(201)
 
-    const list = await app.inject({ method: 'GET', url: '/api/items' })
+    const list = await request({ method: 'GET', url: '/api/items' })
     expect(list.json()).toHaveLength(2)
   })
 
   test('DELETE /api/items/:id returns 204 and removes the Item', async () => {
-    const created = await app.inject({
+    const created = await request({
       method: 'POST',
       url: '/api/items',
       payload,
     })
     const { id } = created.json() as { id: string }
 
-    const deleted = await app.inject({ method: 'DELETE', url: `/api/items/${id}` })
+    const deleted = await request({ method: 'DELETE', url: `/api/items/${id}` })
     expect(deleted.statusCode).toBe(204)
 
-    const list = await app.inject({ method: 'GET', url: '/api/items' })
+    const list = await request({ method: 'GET', url: '/api/items' })
     const rows = list.json() as { id: string }[]
     expect(rows.find((row) => row.id === id)).toBeUndefined()
   })
 
   test('DELETE /api/items/:id missing id returns 404', async () => {
-    const response = await app.inject({
+    const response = await request({
       method: 'DELETE',
       url: '/api/items/00000000-0000-4000-8000-000000000000',
     })

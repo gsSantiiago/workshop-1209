@@ -12,7 +12,16 @@ main {
 
 nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  align-items: center;
+}
+
+nav .session {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 nav button[aria-current='page'] {
@@ -53,6 +62,10 @@ li {
 
 li.warehouse {
   grid-template-columns: 1fr auto;
+}
+
+li.user {
+  grid-template-columns: 2fr 1fr auto;
 }
 
 li.stock {

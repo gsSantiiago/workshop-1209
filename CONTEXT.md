@@ -27,3 +27,11 @@ _Avoid_: stock on the Item, stock in the catalog
 **Stock**:
 The quantity of one Item in one Warehouse. An Item can have Stock in more than one Warehouse.
 _Avoid_: inventory on the Item, balance on the Catalog, estoque
+
+**User**:
+A person who signs in. Not Staff.
+_Avoid_: account, usuário, login (as an entity)
+
+**Role**:
+Administrator or Operator. A User has one Role.
+_Avoid_: permission, perfil, group
