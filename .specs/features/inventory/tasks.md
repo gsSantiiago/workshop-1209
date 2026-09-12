@@ -471,12 +471,12 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] No test POSTs `/api/stock` expecting 201
-- [ ] POST `/api/stock` and DELETE `/api/stock/:id` assert 404
-- [ ] GET `/api/stock` still lists balances created by Receipt
-- [ ] DELETE Warehouse/Item with Stock still 409
-- [ ] Gate check passes: `bun test apps/api`
-- [ ] Test count: suite stays green (no silent deletions of warehouse cases)
+- [x] No test POSTs `/api/stock` expecting 201
+- [x] POST `/api/stock` and DELETE `/api/stock/:id` assert 404
+- [x] GET `/api/stock` still lists balances created by Receipt
+- [x] DELETE Warehouse/Item with Stock still 409
+- [x] Gate check passes: `bun test apps/api`
+- [x] Test count: suite stays green (no silent deletions of warehouse cases)
 
 **Tests**: integration
 **Gate**: full

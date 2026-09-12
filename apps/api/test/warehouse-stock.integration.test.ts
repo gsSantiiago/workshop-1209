@@ -23,6 +23,7 @@ const warehousePayload = { name: 'Central' }
 
 function clearTables() {
   const sqlite = new Database(dbFile)
+  sqlite.exec('DELETE FROM movements')
   sqlite.exec('DELETE FROM stock')
   sqlite.exec('DELETE FROM warehouses')
   sqlite.exec('DELETE FROM items')
@@ -229,7 +230,70 @@ describe('warehouses and stock HTTP', () => {
     ).toBe(true)
   })
 
-  test('POST /api/stock creates quantity in a Warehouse without putting quantity on the Item', async () => {
+  test('Receipt creates quantity in a Warehouse without putting quantity on the Item', async () => {
+    const item = (
+      await request({ method: 'POST', url: '/api/items', payload: itemPayload })
+    ).json() as { id: string }
+    const warehouse = (
+      await request({
+        method: 'POST',
+        url: '/api/warehouses',
+        payload: warehousePayload,
+      })
+    ).json() as { id: string }
+
+    const receipt = await request({
+      method: 'POST',
+      url: '/api/receipts',
+      payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 12.5 },
+    })
+    expect(receipt.statusCode).toBe(201)
+
+    const response = await request({ method: 'GET', url: '/api/stock' })
+    expect(response.statusCode).toBe(200)
+    const list = response.json() as Record<string, unknown>[]
+    expect(list).toHaveLength(1)
+    expect(list[0]?.warehouseId).toBe(warehouse.id)
+    expect(list[0]?.itemId).toBe(item.id)
+    expect(list[0]?.quantity).toBe(12.5)
+
+    const catalog = await request({ method: 'GET', url: '/api/items' })
+    const listed = catalog.json() as Record<string, unknown>[]
+    expect(listed).toHaveLength(1)
+    expect('quantity' in (listed[0] ?? {})).toBe(false)
+
+    const { columns } = getTableConfig(items)
+    expect(columns.map((column) => column.name)).not.toContain('quantity')
+  })
+
+  test('GET /api/stock contains Stock created by Receipt', async () => {
+    const item = (
+      await request({ method: 'POST', url: '/api/items', payload: itemPayload })
+    ).json() as { id: string }
+    const warehouse = (
+      await request({
+        method: 'POST',
+        url: '/api/warehouses',
+        payload: warehousePayload,
+      })
+    ).json() as { id: string }
+
+    await request({
+      method: 'POST',
+      url: '/api/receipts',
+      payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 4 },
+    })
+
+    const response = await request({ method: 'GET', url: '/api/stock' })
+    expect(response.statusCode).toBe(200)
+    const list = response.json() as Record<string, unknown>[]
+    expect(list).toHaveLength(1)
+    expect(list[0]?.warehouseId).toBe(warehouse.id)
+    expect(list[0]?.itemId).toBe(item.id)
+    expect(list[0]?.quantity).toBe(4)
+  })
+
+  test('POST /api/stock returns 404 and persists no Stock', async () => {
     const item = (
       await request({ method: 'POST', url: '/api/items', payload: itemPayload })
     ).json() as { id: string }
@@ -246,23 +310,11 @@ describe('warehouses and stock HTTP', () => {
       url: '/api/stock',
       payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 12.5 },
     })
-    expect(response.statusCode).toBe(201)
-    const body = response.json() as Record<string, unknown>
-    expect(body.id).toMatch(UUID)
-    expect(body.warehouseId).toBe(warehouse.id)
-    expect(body.itemId).toBe(item.id)
-    expect(body.quantity).toBe(12.5)
-
-    const catalog = await request({ method: 'GET', url: '/api/items' })
-    const listed = catalog.json() as Record<string, unknown>[]
-    expect(listed).toHaveLength(1)
-    expect('quantity' in (listed[0] ?? {})).toBe(false)
-
-    const { columns } = getTableConfig(items)
-    expect(columns.map((column) => column.name)).not.toContain('quantity')
+    expect(response.statusCode).toBe(404)
+    expect((await request({ method: 'GET', url: '/api/stock' })).json()).toEqual([])
   })
 
-  test('GET /api/stock contains the created Stock', async () => {
+  test('DELETE /api/stock/:id returns 404 and leaves Stock unchanged', async () => {
     const item = (
       await request({ method: 'POST', url: '/api/items', payload: itemPayload })
     ).json() as { id: string }
@@ -273,176 +325,23 @@ describe('warehouses and stock HTTP', () => {
         payload: warehousePayload,
       })
     ).json() as { id: string }
-
-    const created = await request({
+    await request({
       method: 'POST',
-      url: '/api/stock',
-      payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 4 },
-    })
-    const row = created.json() as Record<string, unknown>
-
-    const response = await request({ method: 'GET', url: '/api/stock' })
-    expect(response.statusCode).toBe(200)
-    const list = response.json() as Record<string, unknown>[]
-    expect(list).toHaveLength(1)
-    expect(list[0]?.id).toBe(row.id)
-    expect(list[0]?.warehouseId).toBe(warehouse.id)
-    expect(list[0]?.itemId).toBe(item.id)
-    expect(list[0]?.quantity).toBe(4)
-    expect(list[0]?.createdAt).toBe(row.createdAt)
-  })
-
-  test('POST /api/stock with blank ids or invalid quantity returns 400 and does not persist', async () => {
-    const item = (
-      await request({ method: 'POST', url: '/api/items', payload: itemPayload })
-    ).json() as { id: string }
-    const warehouse = (
-      await request({
-        method: 'POST',
-        url: '/api/warehouses',
-        payload: warehousePayload,
-      })
-    ).json() as { id: string }
-
-    const cases = [
-      { warehouseId: '', itemId: item.id, quantity: 1 },
-      { warehouseId: warehouse.id, itemId: '', quantity: 1 },
-      { warehouseId: warehouse.id, itemId: item.id, quantity: -1 },
-      { warehouseId: warehouse.id, itemId: item.id, quantity: '12' },
-    ]
-
-    for (const payload of cases) {
-      const sqlite = new Database(dbFile)
-      sqlite.exec('DELETE FROM stock')
-      sqlite.close()
-
-      const response = await request({
-        method: 'POST',
-        url: '/api/stock',
-        payload,
-      })
-      expect(response.statusCode).toBe(400)
-      expect(response.json()).toEqual({
-        error: 'warehouseId, itemId, and a non-negative quantity are required',
-        statusCode: 400,
-      })
-
-      const list = await request({ method: 'GET', url: '/api/stock' })
-      expect(list.json()).toEqual([])
-    }
-  })
-
-  test('POST /api/stock missing Warehouse or Item returns 400', async () => {
-    const item = (
-      await request({ method: 'POST', url: '/api/items', payload: itemPayload })
-    ).json() as { id: string }
-    const warehouse = (
-      await request({
-        method: 'POST',
-        url: '/api/warehouses',
-        payload: warehousePayload,
-      })
-    ).json() as { id: string }
-
-    const missingWarehouse = await request({
-      method: 'POST',
-      url: '/api/stock',
-      payload: {
-        warehouseId: '00000000-0000-4000-8000-000000000000',
-        itemId: item.id,
-        quantity: 1,
-      },
-    })
-    expect(missingWarehouse.statusCode).toBe(400)
-    expect(missingWarehouse.json()).toEqual({
-      error: 'Warehouse or Item not found',
-      statusCode: 400,
-    })
-
-    const missingItem = await request({
-      method: 'POST',
-      url: '/api/stock',
-      payload: {
-        warehouseId: warehouse.id,
-        itemId: '00000000-0000-4000-8000-000000000000',
-        quantity: 1,
-      },
-    })
-    expect(missingItem.statusCode).toBe(400)
-    expect(missingItem.json()).toEqual({
-      error: 'Warehouse or Item not found',
-      statusCode: 400,
-    })
-  })
-
-  test('POST /api/stock duplicate Warehouse and Item returns 409 and keeps one row', async () => {
-    const item = (
-      await request({ method: 'POST', url: '/api/items', payload: itemPayload })
-    ).json() as { id: string }
-    const warehouse = (
-      await request({
-        method: 'POST',
-        url: '/api/warehouses',
-        payload: warehousePayload,
-      })
-    ).json() as { id: string }
-    const payload = { warehouseId: warehouse.id, itemId: item.id, quantity: 2 }
-
-    const first = await request({ method: 'POST', url: '/api/stock', payload })
-    expect(first.statusCode).toBe(201)
-
-    const second = await request({
-      method: 'POST',
-      url: '/api/stock',
-      payload: { ...payload, quantity: 9 },
-    })
-    expect(second.statusCode).toBe(409)
-    expect(second.json()).toEqual({
-      error: 'Stock already exists',
-      statusCode: 409,
-    })
-
-    const list = await request({ method: 'GET', url: '/api/stock' })
-    const rows = list.json() as { quantity: number }[]
-    expect(rows).toHaveLength(1)
-    expect(rows[0]?.quantity).toBe(2)
-  })
-
-  test('DELETE /api/stock/:id returns 204 and removes the Stock', async () => {
-    const item = (
-      await request({ method: 'POST', url: '/api/items', payload: itemPayload })
-    ).json() as { id: string }
-    const warehouse = (
-      await request({
-        method: 'POST',
-        url: '/api/warehouses',
-        payload: warehousePayload,
-      })
-    ).json() as { id: string }
-    const created = await request({
-      method: 'POST',
-      url: '/api/stock',
+      url: '/api/receipts',
       payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 3 },
     })
-    const { id } = created.json() as { id: string }
+    const listed = (await request({ method: 'GET', url: '/api/stock' })).json() as {
+      id: string
+    }[]
 
-    const deleted = await request({ method: 'DELETE', url: `/api/stock/${id}` })
-    expect(deleted.statusCode).toBe(204)
+    const deleted = await request({ method: 'DELETE', url: `/api/stock/${listed[0]?.id}` })
+    expect(deleted.statusCode).toBe(404)
 
-    const list = await request({ method: 'GET', url: '/api/stock' })
-    expect(list.json()).toEqual([])
-  })
-
-  test('DELETE /api/stock/:id missing id returns 404', async () => {
-    const response = await request({
-      method: 'DELETE',
-      url: '/api/stock/00000000-0000-4000-8000-000000000000',
-    })
-    expect(response.statusCode).toBe(404)
-    expect(response.json()).toEqual({
-      error: 'Stock not found',
-      statusCode: 404,
-    })
+    const after = (await request({ method: 'GET', url: '/api/stock' })).json() as {
+      quantity: number
+    }[]
+    expect(after).toHaveLength(1)
+    expect(after[0]?.quantity).toBe(3)
   })
 
   test('DELETE /api/warehouses/:id with Stock returns 409', async () => {
@@ -458,7 +357,7 @@ describe('warehouses and stock HTTP', () => {
     ).json() as { id: string }
     await request({
       method: 'POST',
-      url: '/api/stock',
+      url: '/api/receipts',
       payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 1 },
     })
 
@@ -486,7 +385,7 @@ describe('warehouses and stock HTTP', () => {
     ).json() as { id: string }
     await request({
       method: 'POST',
-      url: '/api/stock',
+      url: '/api/receipts',
       payload: { warehouseId: warehouse.id, itemId: item.id, quantity: 1 },
     })
 
