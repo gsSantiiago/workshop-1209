@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 import type { AppDatabase } from '../db/client'
-import { movements, stock } from '../db/schema'
+import { items, jobs, movements, stock, warehouses } from '../db/schema'
 import type { StockRecord } from './stock.repository'
 
 export type MovementType = 'receipt' | 'transfer' | 'issue'
@@ -28,6 +28,21 @@ export class MovementRepository {
   async list(): Promise<MovementRecord[]> {
     const rows = await this.db.select().from(movements)
     return rows.map(toMovement)
+  }
+
+  async existsWarehouse(id: string): Promise<boolean> {
+    const rows = await this.db.select({ id: warehouses.id }).from(warehouses).where(eq(warehouses.id, id)).limit(1)
+    return rows.length > 0
+  }
+
+  async existsItem(id: string): Promise<boolean> {
+    const rows = await this.db.select({ id: items.id }).from(items).where(eq(items.id, id)).limit(1)
+    return rows.length > 0
+  }
+
+  async existsJob(id: string): Promise<boolean> {
+    const rows = await this.db.select({ id: jobs.id }).from(jobs).where(eq(jobs.id, id)).limit(1)
+    return rows.length > 0
   }
 
   async findStock(warehouseId: string, itemId: string): Promise<StockRecord | null> {

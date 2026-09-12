@@ -245,12 +245,12 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] Success subtracts source; quantity `0` still calls `apply` with `0`
-- [ ] Insufficient → 400 `Insufficient Stock`; `apply` not called
-- [ ] Missing Job FK → 400 `Job not found`
-- [ ] Blank ids / bad quantity / missing Warehouse or Item match spec
-- [ ] Gate check passes: `bun test apps/api/src/services`
-- [ ] Test count: 6+ Issue tests pass (no silent deletions)
+- [x] Success subtracts source; quantity `0` still calls `apply` with `0`
+- [x] Insufficient → 400 `Insufficient Stock`; `apply` not called
+- [x] Missing Job FK → 400 `Job not found`
+- [x] Blank ids / bad quantity / missing Warehouse or Item match spec
+- [x] Gate check passes: `bun test apps/api/src/services`
+- [x] Test count: 6+ Issue tests pass (no silent deletions)
 
 **Tests**: unit
 **Gate**: quick

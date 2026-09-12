@@ -188,13 +188,13 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-19 | P1: Transfer transaction | T4, T6 | Implementing |
 | INV-20 | P1: Operator Transfer | T13 | In Tasks |
 | INV-21 | P1: Issue persist 201 | T7, T13 | Implementing |
-| INV-22 | P1: Issue subtracts Stock | T7, T13 | In Tasks |
-| INV-23 | P1: Issue keeps zero | T7, T13 | In Tasks |
-| INV-24 | P1: Issue insufficient | T7, T13 | In Tasks |
-| INV-25 | P1: Issue blank ids | T7, T13 | In Tasks |
-| INV-26 | P1: Issue bad quantity | T7, T13 | In Tasks |
-| INV-27 | P1: Issue missing Warehouse/Item | T7, T13 | In Tasks |
-| INV-28 | P1: Issue missing Job | T7, T13 | In Tasks |
+| INV-22 | P1: Issue subtracts Stock | T7, T13 | Implementing |
+| INV-23 | P1: Issue keeps zero | T7, T13 | Implementing |
+| INV-24 | P1: Issue insufficient | T7, T13 | Implementing |
+| INV-25 | P1: Issue blank ids | T7, T13 | Implementing |
+| INV-26 | P1: Issue bad quantity | T7, T13 | Implementing |
+| INV-27 | P1: Issue missing Warehouse/Item | T7, T13 | Implementing |
+| INV-28 | P1: Issue missing Job | T7, T13 | Implementing |
 | INV-29 | P1: Operator Issue | T13 | In Tasks |
 | INV-30 | P1: Job delete with Issue | T8, T13 | In Tasks |
 | INV-31 | P1: GET Stock | T14, T16 | In Tasks |

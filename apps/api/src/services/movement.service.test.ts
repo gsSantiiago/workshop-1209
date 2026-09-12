@@ -393,4 +393,215 @@ describe('MovementService', () => {
       }
     }
   })
+
+  const validIssue = {
+    warehouseId: 'warehouse-1',
+    itemId: 'item-1',
+    jobId: 'job-1',
+    quantity: 2,
+  }
+
+  function stubIssueRefs(movements: sinon.SinonStubbedInstance<MovementRepository>) {
+    movements.existsWarehouse.resolves(true)
+    movements.existsItem.resolves(true)
+    movements.existsJob.resolves(true)
+  }
+
+  test('createIssue persists an issue Movement with jobId and no Job quantity', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    stubIssueRefs(movements)
+    movements.findStock.resolves({
+      id: 'stock-1',
+      warehouseId: 'warehouse-1',
+      itemId: 'item-1',
+      quantity: 10,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    const created = await service.createIssue(validIssue)
+
+    expect(created.id).toMatch(UUID)
+    expect(created.createdAt).toMatch(ISO_8601)
+    expect(created.type).toBe('issue')
+    expect(created.warehouseId).toBe('warehouse-1')
+    expect(created.itemId).toBe('item-1')
+    expect(created.jobId).toBe('job-1')
+    expect(created.quantity).toBe(2)
+    expect(created.toWarehouseId).toBeNull()
+    expect(Object.keys(created).sort()).toEqual([
+      'createdAt',
+      'id',
+      'itemId',
+      'jobId',
+      'quantity',
+      'toWarehouseId',
+      'type',
+      'warehouseId',
+    ])
+    expect(movements.apply.calledOnce).toBe(true)
+    expect(movements.apply.firstCall.args[0]).toEqual(created)
+  })
+
+  test('createIssue subtracts 2 from source Stock', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    stubIssueRefs(movements)
+    movements.findStock.resolves({
+      id: 'stock-1',
+      warehouseId: 'warehouse-1',
+      itemId: 'item-1',
+      quantity: 10,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    await service.createIssue(validIssue)
+
+    expect(movements.apply.firstCall.args[1]).toEqual([
+      { warehouseId: 'warehouse-1', itemId: 'item-1', quantity: 8 },
+    ])
+  })
+
+  test('createIssue keeps Stock at 0 when the Issue empties the row', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    stubIssueRefs(movements)
+    movements.findStock.resolves({
+      id: 'stock-1',
+      warehouseId: 'warehouse-1',
+      itemId: 'item-1',
+      quantity: 2,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    await service.createIssue(validIssue)
+
+    expect(movements.apply.calledOnce).toBe(true)
+    expect(movements.apply.firstCall.args[1]).toEqual([
+      { warehouseId: 'warehouse-1', itemId: 'item-1', quantity: 0 },
+    ])
+  })
+
+  test('createIssue with missing or short source Stock throws 400 and does not call apply', async () => {
+    const sources = [null, {
+      id: 'stock-1',
+      warehouseId: 'warehouse-1',
+      itemId: 'item-1',
+      quantity: 1,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    }]
+
+    for (const source of sources) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      stubIssueRefs(movements)
+      movements.findStock.resolves(source)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createIssue(validIssue)
+        throw new Error('expected createIssue to throw')
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe('Insufficient Stock')
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createIssue with blank ids throws 400 and does not call apply', async () => {
+    const cases = [
+      { warehouseId: '', itemId: 'item-1', jobId: 'job-1', quantity: 2 },
+      { warehouseId: 'warehouse-1', itemId: '', jobId: 'job-1', quantity: 2 },
+      { warehouseId: 'warehouse-1', itemId: 'item-1', jobId: '', quantity: 2 },
+      { warehouseId: '   ', itemId: 'item-1', jobId: 'job-1', quantity: 2 },
+    ]
+
+    for (const input of cases) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createIssue(input)
+        throw new Error(`expected createIssue to throw for ${JSON.stringify(input)}`)
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe(
+          'warehouseId, itemId, jobId, and a positive quantity are required',
+        )
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createIssue with invalid quantity throws 400 and does not call apply', async () => {
+    const cases = [undefined, null, '2', NaN, Infinity, 0, -1]
+
+    for (const quantity of cases) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createIssue({
+          warehouseId: 'warehouse-1',
+          itemId: 'item-1',
+          jobId: 'job-1',
+          quantity,
+        })
+        throw new Error(`expected createIssue to throw for ${String(quantity)}`)
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe('quantity must be a positive number')
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createIssue with a missing Warehouse or Item throws 400 and does not call apply', async () => {
+    const cases = [
+      { warehouse: false, item: true },
+      { warehouse: true, item: false },
+    ]
+
+    for (const refs of cases) {
+      const movements = sinon.createStubInstance(MovementRepository)
+      movements.existsWarehouse.resolves(refs.warehouse)
+      movements.existsItem.resolves(refs.item)
+      movements.existsJob.resolves(true)
+      const service = new MovementService(movements)
+
+      try {
+        await service.createIssue(validIssue)
+        throw new Error('expected createIssue to throw')
+      } catch (error) {
+        expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+        expect((error as Error).message).toBe('Warehouse or Item not found')
+      }
+
+      expect(movements.apply.notCalled).toBe(true)
+    }
+  })
+
+  test('createIssue with a missing Job throws 400 and does not call apply', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.existsWarehouse.resolves(true)
+    movements.existsItem.resolves(true)
+    movements.existsJob.resolves(false)
+    const service = new MovementService(movements)
+
+    try {
+      await service.createIssue(validIssue)
+      throw new Error('expected createIssue to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(400)
+      expect((error as Error).message).toBe('Job not found')
+    }
+
+    expect(movements.apply.notCalled).toBe(true)
+  })
 })

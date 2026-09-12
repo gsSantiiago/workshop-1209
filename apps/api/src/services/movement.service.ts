@@ -16,6 +16,13 @@ export type TransferInput = {
   quantity?: unknown
 }
 
+export type IssueInput = {
+  warehouseId?: string
+  itemId?: string
+  jobId?: string
+  quantity?: unknown
+}
+
 export class MovementService {
   constructor(private readonly movements: MovementRepository) {}
 
@@ -96,6 +103,54 @@ export class MovementService {
       await this.movements.apply(movement, [
         { warehouseId: fromWarehouseId, itemId, quantity: source.quantity - input.quantity },
         { warehouseId: toWarehouseId, itemId, quantity: (dest?.quantity ?? 0) + input.quantity },
+      ])
+    } catch (error) {
+      if (isForeignKeyViolation(error)) {
+        throw httpError('Warehouse or Item not found', 400)
+      }
+      throw error
+    }
+
+    return movement
+  }
+
+  async createIssue(input: IssueInput): Promise<MovementRecord> {
+    const warehouseId = input.warehouseId?.trim() ?? ''
+    const itemId = input.itemId?.trim() ?? ''
+    const jobId = input.jobId?.trim() ?? ''
+    if (!warehouseId || !itemId || !jobId) {
+      throw httpError('warehouseId, itemId, jobId, and a positive quantity are required', 400)
+    }
+    if (!isPositiveQuantity(input.quantity)) {
+      throw httpError('quantity must be a positive number', 400)
+    }
+
+    if (!(await this.movements.existsWarehouse(warehouseId)) || !(await this.movements.existsItem(itemId))) {
+      throw httpError('Warehouse or Item not found', 400)
+    }
+    if (!(await this.movements.existsJob(jobId))) {
+      throw httpError('Job not found', 400)
+    }
+
+    const source = await this.movements.findStock(warehouseId, itemId)
+    if (!source || source.quantity < input.quantity) {
+      throw httpError('Insufficient Stock', 400)
+    }
+
+    const movement: MovementRecord = {
+      id: crypto.randomUUID(),
+      type: 'issue',
+      itemId,
+      quantity: input.quantity,
+      warehouseId,
+      toWarehouseId: null,
+      jobId,
+      createdAt: new Date().toISOString(),
+    }
+
+    try {
+      await this.movements.apply(movement, [
+        { warehouseId, itemId, quantity: source.quantity - input.quantity },
       ])
     } catch (error) {
       if (isForeignKeyViolation(error)) {
