@@ -448,8 +448,8 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] POST and DELETE handlers are gone
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] POST and DELETE handlers are gone
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build
