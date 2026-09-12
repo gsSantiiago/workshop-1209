@@ -165,9 +165,9 @@ T17 -> T18
 
 **Done when**:
 
-- [ ] `apply` writes Movement and Stock deltas inside one `db.transaction`
-- [ ] `findStock` returns the Warehouse+Item row or null
-- [ ] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
+- [x] `apply` writes Movement and Stock deltas inside one `db.transaction`
+- [x] `findStock` returns the Warehouse+Item row or null
+- [x] Gate check passes: `bun test apps/api && bun --filter @fake-erp/web lint`
 
 **Tests**: none
 **Gate**: build

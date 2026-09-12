@@ -185,7 +185,7 @@ Every ambiguity is resolved or recorded here - nothing is left silently unclear.
 | INV-16 | P1: Transfer blank ids | T6, T13 | In Tasks |
 | INV-17 | P1: Transfer bad quantity | T6, T13 | In Tasks |
 | INV-18 | P1: Transfer missing refs | T6, T13 | In Tasks |
-| INV-19 | P1: Transfer transaction | T4, T6 | In Tasks |
+| INV-19 | P1: Transfer transaction | T4, T6 | Implementing |
 | INV-20 | P1: Operator Transfer | T13 | In Tasks |
 | INV-21 | P1: Issue persist 201 | T7, T13 | Implementing |
 | INV-22 | P1: Issue subtracts Stock | T7, T13 | In Tasks |
