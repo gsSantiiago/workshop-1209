@@ -39,3 +39,19 @@ _Avoid_: permission, perfil, group
 **Job**:
 The work site. Not a Warehouse. Quantity does not belong here.
 _Avoid_: obra, canteiro, project, site, Warehouse (as this place)
+
+**Movement**:
+A Receipt, Transfer, or Issue that writes Stock quantity. Nothing else writes Stock.
+_Avoid_: movimento, stock write by hand
+
+**Receipt**:
+Quantity of an Item entering a Warehouse.
+_Avoid_: recebimento, entrada, Purchase (as this Movement)
+
+**Transfer**:
+Quantity of an Item moving from one Warehouse to another.
+_Avoid_: transferência, move between Jobs
+
+**Issue**:
+Quantity of an Item leaving a Warehouse for a Job. The Job does not hold that quantity.
+_Avoid_: baixa, saída, quantity on the Job
