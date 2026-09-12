@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm'
 import type { AppDatabase } from '../db/client'
-import { items, jobs, movements, stock, warehouses } from '../db/schema'
+import { items, jobs, movements, purchases, stock, warehouses } from '../db/schema'
 import type { StockRecord } from './stock.repository'
 
 export type MovementType = 'receipt' | 'transfer' | 'issue'
@@ -13,7 +13,15 @@ export type MovementRecord = {
   warehouseId: string
   toWarehouseId: string | null
   jobId: string | null
+  purchaseId: string | null
   createdAt: string
+}
+
+export type PurchaseRef = {
+  id: string
+  itemId: string
+  warehouseId: string
+  quantity: number
 }
 
 export type StockDelta = {
@@ -45,6 +53,20 @@ export class MovementRepository {
     return rows.length > 0
   }
 
+  async findPurchase(id: string): Promise<PurchaseRef | null> {
+    const rows = await this.db.select().from(purchases).where(eq(purchases.id, id)).limit(1)
+    const row = rows[0]
+    if (!row) {
+      return null
+    }
+    return {
+      id: row.id,
+      itemId: row.itemId,
+      warehouseId: row.warehouseId,
+      quantity: row.quantity,
+    }
+  }
+
   async findStock(warehouseId: string, itemId: string): Promise<StockRecord | null> {
     const rows = await this.db
       .select()
@@ -74,6 +96,7 @@ export class MovementRepository {
         warehouseId: movement.warehouseId,
         toWarehouseId: movement.toWarehouseId,
         jobId: movement.jobId,
+        purchaseId: movement.purchaseId,
         createdAt: movement.createdAt,
       })
 
@@ -109,6 +132,7 @@ function toMovement(row: typeof movements.$inferSelect): MovementRecord {
     warehouseId: row.warehouseId,
     toWarehouseId: row.toWarehouseId ?? null,
     jobId: row.jobId ?? null,
+    purchaseId: row.purchaseId ?? null,
     createdAt: row.createdAt,
   }
 }

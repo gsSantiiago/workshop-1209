@@ -49,6 +49,7 @@ export class MovementService {
       warehouseId,
       toWarehouseId: null,
       jobId: null,
+      purchaseId: null,
       createdAt: new Date().toISOString(),
     }
 
@@ -59,6 +60,43 @@ export class MovementService {
     } catch (error) {
       if (isForeignKeyViolation(error)) {
         throw httpError('Warehouse or Item not found', 400)
+      }
+      throw error
+    }
+
+    return movement
+  }
+
+  async createReceiptFromPurchase(purchaseId: string): Promise<MovementRecord> {
+    const purchase = await this.movements.findPurchase(purchaseId)
+    if (!purchase) {
+      throw httpError('Purchase not found', 404)
+    }
+
+    const current = await this.movements.findStock(purchase.warehouseId, purchase.itemId)
+    const movement: MovementRecord = {
+      id: crypto.randomUUID(),
+      type: 'receipt',
+      itemId: purchase.itemId,
+      quantity: purchase.quantity,
+      warehouseId: purchase.warehouseId,
+      toWarehouseId: null,
+      jobId: null,
+      purchaseId: purchase.id,
+      createdAt: new Date().toISOString(),
+    }
+
+    try {
+      await this.movements.apply(movement, [
+        {
+          warehouseId: purchase.warehouseId,
+          itemId: purchase.itemId,
+          quantity: (current?.quantity ?? 0) + purchase.quantity,
+        },
+      ])
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw httpError('Purchase already received', 409)
       }
       throw error
     }
@@ -104,6 +142,7 @@ export class MovementService {
       warehouseId: fromWarehouseId,
       toWarehouseId,
       jobId: null,
+      purchaseId: null,
       createdAt: new Date().toISOString(),
     }
 
@@ -153,6 +192,7 @@ export class MovementService {
       warehouseId,
       toWarehouseId: null,
       jobId,
+      purchaseId: null,
       createdAt: new Date().toISOString(),
     }
 
@@ -179,6 +219,10 @@ function httpError(message: string, statusCode: number): Error {
   const error = new Error(message) as Error & { statusCode: number }
   error.statusCode = statusCode
   return error
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  return constraintFailed(error, 'SQLITE_CONSTRAINT_UNIQUE', 'UNIQUE constraint failed')
 }
 
 function isForeignKeyViolation(error: unknown): boolean {

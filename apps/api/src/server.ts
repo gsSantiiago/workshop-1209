@@ -14,7 +14,9 @@ import { healthRoutes } from './routes/health'
 import { itemRoutes } from './routes/items'
 import { jobRoutes } from './routes/jobs'
 import { movementRoutes } from './routes/movements'
+import { purchaseRoutes } from './routes/purchases'
 import { stockRoutes } from './routes/stock'
+import { supplierRoutes } from './routes/suppliers'
 import { userRoutes } from './routes/users'
 import { warehouseRoutes } from './routes/warehouses'
 import './types/session'
@@ -59,6 +61,8 @@ export async function createServer() {
   await fastify.register(jobRoutes)
   await fastify.register(movementRoutes)
   await fastify.register(stockRoutes)
+  await fastify.register(supplierRoutes)
+  await fastify.register(purchaseRoutes)
 
   return fastify
 }

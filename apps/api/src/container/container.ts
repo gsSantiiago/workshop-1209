@@ -45,6 +45,10 @@ export const tokens = {
   userService: 'userService',
   movementRepository: 'movementRepository',
   movementService: 'movementService',
+  supplierRepository: 'supplierRepository',
+  supplierService: 'supplierService',
+  purchaseRepository: 'purchaseRepository',
+  purchaseService: 'purchaseService',
 } as const
 
 export const container = new Container()

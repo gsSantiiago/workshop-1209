@@ -2,13 +2,17 @@ import { createDb } from '../db/client'
 import { ItemRepository } from '../repositories/item.repository'
 import { JobRepository } from '../repositories/job.repository'
 import { MovementRepository } from '../repositories/movement.repository'
+import { PurchaseRepository } from '../repositories/purchase.repository'
 import { StockRepository } from '../repositories/stock.repository'
+import { SupplierRepository } from '../repositories/supplier.repository'
 import { UserRepository } from '../repositories/user.repository'
 import { WarehouseRepository } from '../repositories/warehouse.repository'
 import { ItemService } from '../services/item.service'
 import { MovementService } from '../services/movement.service'
 import { JobService } from '../services/job.service'
+import { PurchaseService } from '../services/purchase.service'
 import { StockService } from '../services/stock.service'
+import { SupplierService } from '../services/supplier.service'
 import { UserService } from '../services/user.service'
 import { WarehouseService } from '../services/warehouse.service'
 import { container, tokens } from './container'
@@ -62,5 +66,21 @@ export function registerServices(): void {
   container.register(
     tokens.movementService,
     (c) => new MovementService(c.get(tokens.movementRepository)),
+  )
+  container.register(
+    tokens.supplierRepository,
+    (c) => new SupplierRepository(c.get(tokens.db)),
+  )
+  container.register(
+    tokens.supplierService,
+    (c) => new SupplierService(c.get(tokens.supplierRepository)),
+  )
+  container.register(
+    tokens.purchaseRepository,
+    (c) => new PurchaseRepository(c.get(tokens.db)),
+  )
+  container.register(
+    tokens.purchaseService,
+    (c) => new PurchaseService(c.get(tokens.purchaseRepository)),
   )
 }

@@ -20,6 +20,27 @@ export const jobs = sqliteTable('jobs', {
   createdAt: text('created_at').notNull(),
 })
 
+export const suppliers = sqliteTable('suppliers', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  createdAt: text('created_at').notNull(),
+})
+
+export const purchases = sqliteTable('purchases', {
+  id: text('id').primaryKey(),
+  supplierId: text('supplier_id')
+    .notNull()
+    .references(() => suppliers.id),
+  itemId: text('item_id')
+    .notNull()
+    .references(() => items.id),
+  warehouseId: text('warehouse_id')
+    .notNull()
+    .references(() => warehouses.id),
+  quantity: real('quantity').notNull(),
+  createdAt: text('created_at').notNull(),
+})
+
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
@@ -46,17 +67,22 @@ export const stock = sqliteTable(
   ],
 )
 
-export const movements = sqliteTable('movements', {
-  id: text('id').primaryKey(),
-  type: text('type').notNull(),
-  itemId: text('item_id')
-    .notNull()
-    .references(() => items.id),
-  quantity: real('quantity').notNull(),
-  warehouseId: text('warehouse_id')
-    .notNull()
-    .references(() => warehouses.id),
-  toWarehouseId: text('to_warehouse_id').references(() => warehouses.id),
-  jobId: text('job_id').references(() => jobs.id),
-  createdAt: text('created_at').notNull(),
-})
+export const movements = sqliteTable(
+  'movements',
+  {
+    id: text('id').primaryKey(),
+    type: text('type').notNull(),
+    itemId: text('item_id')
+      .notNull()
+      .references(() => items.id),
+    quantity: real('quantity').notNull(),
+    warehouseId: text('warehouse_id')
+      .notNull()
+      .references(() => warehouses.id),
+    toWarehouseId: text('to_warehouse_id').references(() => warehouses.id),
+    jobId: text('job_id').references(() => jobs.id),
+    purchaseId: text('purchase_id').references(() => purchases.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [uniqueIndex('movements_purchase_id_unique').on(table.purchaseId)],
+)

@@ -33,6 +33,7 @@ describe('MovementService', () => {
         warehouseId: 'warehouse-1',
         toWarehouseId: null,
         jobId: null,
+        purchaseId: null,
         createdAt: '2026-09-12T00:00:00.000Z',
       },
     ]
@@ -446,11 +447,13 @@ describe('MovementService', () => {
       'id',
       'itemId',
       'jobId',
+      'purchaseId',
       'quantity',
       'toWarehouseId',
       'type',
       'warehouseId',
     ])
+    expect(created.purchaseId).toBeNull()
     expect(movements.apply.calledOnce).toBe(true)
     expect(movements.apply.firstCall.args[0]).toEqual(created)
   })
@@ -596,6 +599,95 @@ describe('MovementService', () => {
 
       expect(movements.apply.notCalled).toBe(true)
     }
+  })
+
+  test('C19 createReceipt sets purchaseId null', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findStock.resolves(null)
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    const created = await service.createReceipt(validReceipt)
+
+    expect(created.purchaseId).toBeNull()
+    expect(created.type).toBe('receipt')
+    expect(movements.apply.firstCall.args[0].purchaseId).toBeNull()
+  })
+
+  test('C16 createReceiptFromPurchase persists a receipt Movement with purchaseId and adds 12.5 to Stock', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findPurchase.resolves({
+      id: 'purchase-1',
+      itemId: 'item-1',
+      warehouseId: 'warehouse-1',
+      quantity: 12.5,
+    })
+    movements.findStock.resolves({
+      id: 'stock-1',
+      warehouseId: 'warehouse-1',
+      itemId: 'item-1',
+      quantity: 4,
+      createdAt: '2026-09-12T00:00:00.000Z',
+    })
+    movements.apply.resolves()
+    const service = new MovementService(movements)
+
+    const created = await service.createReceiptFromPurchase('purchase-1')
+
+    expect(created.id).toMatch(UUID)
+    expect(created.createdAt).toMatch(ISO_8601)
+    expect(created.type).toBe('receipt')
+    expect(created.itemId).toBe('item-1')
+    expect(created.quantity).toBe(12.5)
+    expect(created.warehouseId).toBe('warehouse-1')
+    expect(created.toWarehouseId).toBeNull()
+    expect(created.jobId).toBeNull()
+    expect(created.purchaseId).toBe('purchase-1')
+    expect(movements.apply.calledOnce).toBe(true)
+    expect(movements.apply.firstCall.args[0]).toEqual(created)
+    expect(movements.apply.firstCall.args[1]).toEqual([
+      { warehouseId: 'warehouse-1', itemId: 'item-1', quantity: 16.5 },
+    ])
+  })
+
+  test('C17 createReceiptFromPurchase maps a unique-constraint error to 409 Purchase already received', async () => {
+    const unique = Object.assign(new Error('UNIQUE constraint failed: movements.purchase_id'), {
+      code: 'SQLITE_CONSTRAINT_UNIQUE',
+    })
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findPurchase.resolves({
+      id: 'purchase-1',
+      itemId: 'item-1',
+      warehouseId: 'warehouse-1',
+      quantity: 12.5,
+    })
+    movements.findStock.resolves(null)
+    movements.apply.rejects(unique)
+    const service = new MovementService(movements)
+
+    try {
+      await service.createReceiptFromPurchase('purchase-1')
+      throw new Error('expected createReceiptFromPurchase to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Purchase already received')
+    }
+  })
+
+  test('C18 createReceiptFromPurchase throws 404 when the Purchase is missing and does not call apply', async () => {
+    const movements = sinon.createStubInstance(MovementRepository)
+    movements.findPurchase.resolves(null)
+    const service = new MovementService(movements)
+
+    try {
+      await service.createReceiptFromPurchase('00000000-0000-4000-8000-000000000000')
+      throw new Error('expected createReceiptFromPurchase to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(404)
+      expect((error as Error).message).toBe('Purchase not found')
+    }
+
+    expect(movements.apply.notCalled).toBe(true)
   })
 
   test('createIssue with a missing Job throws 400 and does not call apply', async () => {

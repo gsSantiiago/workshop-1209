@@ -21,6 +21,8 @@ function clearTables() {
   const sqlite = new Database(dbFile)
   sqlite.exec('DELETE FROM movements')
   sqlite.exec('DELETE FROM stock')
+  sqlite.exec('DELETE FROM purchases')
+  sqlite.exec('DELETE FROM suppliers')
   sqlite.exec('DELETE FROM jobs')
   sqlite.exec('DELETE FROM warehouses')
   sqlite.exec('DELETE FROM items')
@@ -107,6 +109,7 @@ describe('movements HTTP', () => {
     expect(body.quantity).toBe(12.5)
     expect(body.toWarehouseId).toBeNull()
     expect(body.jobId).toBeNull()
+    expect(body.purchaseId).toBeNull()
     expect(typeof body.createdAt).toBe('string')
     expect(Number.isNaN(Date.parse(body.createdAt as string))).toBe(false)
   })
@@ -124,6 +127,28 @@ describe('movements HTTP', () => {
     const list = response.json() as Record<string, unknown>[]
     expect(list).toHaveLength(1)
     expect(list[0]).toEqual(movement)
+  })
+
+  test('C19 POST /api/receipts returns purchaseId null and Stock rises by 3', async () => {
+    const { item, warehouseA } = await seedRefs()
+    const response = await request({
+      method: 'POST',
+      url: '/api/receipts',
+      payload: { warehouseId: warehouseA.id, itemId: item.id, quantity: 3 },
+    })
+    expect(response.statusCode).toBe(201)
+    const body = response.json() as Record<string, unknown>
+    expect(body.type).toBe('receipt')
+    expect(body.purchaseId).toBeNull()
+    const stock = (await request({ method: 'GET', url: '/api/stock' })).json() as {
+      warehouseId: string
+      itemId: string
+      quantity: number
+    }[]
+    expect(stock).toHaveLength(1)
+    expect(stock[0]?.warehouseId).toBe(warehouseA.id)
+    expect(stock[0]?.itemId).toBe(item.id)
+    expect(stock[0]?.quantity).toBe(3)
   })
 
   test('GET /api/stock after Receipt includes quantity 12.5', async () => {
