@@ -6,6 +6,11 @@ dist-ssr
 .env.*
 !.env.example
 
+.checks
+.plan
+.design
+.specs
+
 *.log
 .DS_Store
 
