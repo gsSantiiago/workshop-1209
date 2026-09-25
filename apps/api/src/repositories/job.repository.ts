@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import type { AppDatabase } from '../db/client'
-import { jobs } from '../db/schema'
+import { assignments, jobs, movements } from '../db/schema'
 
 export type JobRecord = {
   id: string
@@ -34,5 +34,23 @@ export class JobRepository {
       .where(eq(jobs.id, id))
       .returning({ id: jobs.id })
     return deleted.length > 0
+  }
+
+  async hasMovement(jobId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: movements.id })
+      .from(movements)
+      .where(eq(movements.jobId, jobId))
+      .limit(1)
+    return rows.length > 0
+  }
+
+  async hasAssignment(jobId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: assignments.id })
+      .from(assignments)
+      .where(eq(assignments.jobId, jobId))
+      .limit(1)
+    return rows.length > 0
   }
 }

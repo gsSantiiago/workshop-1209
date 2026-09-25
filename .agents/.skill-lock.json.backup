@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "skills": {
+    "tlc-spec-lean": {
+      "name": "tlc-spec-lean",
+      "source": "local",
+      "contentHash": "28368cb86a9d441fce24426eb502a39a5e7f9ffe0ad5d682fead2ce76c5b085b",
+      "installedAt": "2026-09-19T23:41:49.629Z",
+      "updatedAt": "2026-09-19T23:41:49.656Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "the-judge": {
+      "name": "the-judge",
+      "source": "local",
+      "contentHash": "05526209052f6592ad98476e8f59e9ffa2a24e803e10a90ceac659476b509403",
+      "installedAt": "2026-09-20T00:13:48.618Z",
+      "updatedAt": "2026-09-20T00:13:48.639Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "harness-eval": {
+      "name": "harness-eval",
+      "source": "local",
+      "contentHash": "675761f3fdb123f26103811ffe52e384adff5ffdf7c603578dfaa4eb2e54b2a2",
+      "installedAt": "2026-09-20T00:22:46.823Z",
+      "updatedAt": "2026-09-20T00:22:46.835Z",
+      "agents": [
+        "cursor",
+        "claude-code"
+      ],
+      "method": "copy",
+      "global": false
+    }
+  }
+}

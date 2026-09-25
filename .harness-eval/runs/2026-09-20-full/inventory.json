@@ -1,0 +1,47 @@
+{
+  "root": "/home/linux/projects/santiago/workshop-1209",
+  "generated_at": "2026-09-20T00:25:15.042338+00:00",
+  "t0": [
+    "AGENTS.md"
+  ],
+  "t1": [
+    ".claude/skills/harness-eval/SKILL.md",
+    ".cursor/skills/harness-eval/SKILL.md",
+    ".cursor/skills/the-judge/SKILL.md",
+    ".cursor/skills/tlc-spec-lean/SKILL.md"
+  ],
+  "t2": [
+    ".claude/skills/harness-eval/references/GLOSSARY.md",
+    ".claude/skills/harness-eval/references/PROTOCOL.md",
+    ".claude/skills/harness-eval/references/claims.schema.json",
+    ".claude/skills/harness-eval/references/judge-prompts.md",
+    ".cursor/skills/harness-eval/references/GLOSSARY.md",
+    ".cursor/skills/harness-eval/references/PROTOCOL.md",
+    ".cursor/skills/harness-eval/references/claims.schema.json",
+    ".cursor/skills/harness-eval/references/judge-prompts.md",
+    ".cursor/skills/the-judge/references/comment-voice.md",
+    ".cursor/skills/the-judge/references/review-standards.md",
+    ".cursor/skills/tlc-spec-lean/references/build.md",
+    ".cursor/skills/tlc-spec-lean/references/checks.md",
+    ".cursor/skills/tlc-spec-lean/references/memory.md",
+    ".cursor/skills/tlc-spec-lean/references/plan.md",
+    ".cursor/skills/tlc-spec-lean/references/verify.md"
+  ],
+  "manifests": [
+    "package.json"
+  ],
+  "manifest_commands": [
+    "dev",
+    "dev:api",
+    "dev:web"
+  ],
+  "doc_scope": {
+    "included_optional_docs": [],
+    "included_doc_types": [],
+    "excluded_decision_record_count": 0,
+    "optional_type_count": {
+      "CONTEXT.md": 1,
+      "package.json": 1
+    }
+  }
+}

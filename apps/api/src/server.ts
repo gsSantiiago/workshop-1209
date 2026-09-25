@@ -9,12 +9,14 @@ import type { AppDatabase } from './db/client'
 import { seedAdministratorIfEmpty } from './db/seed'
 import { registerAuth } from './middleware/auth'
 import { registerErrorHandler } from './middleware/error'
+import { assignmentRoutes } from './routes/assignments'
 import { authRoutes } from './routes/auth'
 import { healthRoutes } from './routes/health'
 import { itemRoutes } from './routes/items'
 import { jobRoutes } from './routes/jobs'
 import { movementRoutes } from './routes/movements'
 import { purchaseRoutes } from './routes/purchases'
+import { staffRoutes } from './routes/staff'
 import { stockRoutes } from './routes/stock'
 import { supplierRoutes } from './routes/suppliers'
 import { userRoutes } from './routes/users'
@@ -59,6 +61,8 @@ export async function createServer() {
   await fastify.register(itemRoutes)
   await fastify.register(warehouseRoutes)
   await fastify.register(jobRoutes)
+  await fastify.register(staffRoutes)
+  await fastify.register(assignmentRoutes)
   await fastify.register(movementRoutes)
   await fastify.register(stockRoutes)
   await fastify.register(supplierRoutes)

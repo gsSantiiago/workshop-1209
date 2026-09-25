@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
-type Screen = 'catalog' | 'warehouse' | 'job' | 'stock' | 'inventory' | 'procurement' | 'users'
+type Screen = 'catalog' | 'warehouse' | 'job' | 'staff' | 'stock' | 'inventory' | 'procurement' | 'users'
 type Role = 'Administrator' | 'Operator'
 
 type User = {
@@ -28,6 +28,21 @@ type Warehouse = {
 type Job = {
   id: string
   name: string
+  createdAt: string
+}
+
+type Staff = {
+  id: string
+  name: string
+  createdAt: string
+}
+
+type Assignment = {
+  id: string
+  staffId: string
+  jobId: string
+  startsOn: string
+  endsOn: string
   createdAt: string
 }
 
@@ -73,6 +88,8 @@ function App() {
   const [items, setItems] = useState<Item[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
+  const [staff, setStaff] = useState<Staff[]>([])
+  const [assignments, setAssignments] = useState<Assignment[]>([])
   const [stock, setStock] = useState<Stock[]>([])
   const [movements, setMovements] = useState<Movement[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -83,6 +100,11 @@ function App() {
   const [unit, setUnit] = useState('')
   const [warehouseName, setWarehouseName] = useState('')
   const [jobName, setJobName] = useState('')
+  const [staffName, setStaffName] = useState('')
+  const [assignmentStaffId, setAssignmentStaffId] = useState('')
+  const [assignmentJobId, setAssignmentJobId] = useState('')
+  const [assignmentStartsOn, setAssignmentStartsOn] = useState('')
+  const [assignmentEndsOn, setAssignmentEndsOn] = useState('')
   const [supplierName, setSupplierName] = useState('')
   const [purchaseSupplierId, setPurchaseSupplierId] = useState('')
   const [purchaseItemId, setPurchaseItemId] = useState('')
@@ -105,6 +127,7 @@ function App() {
   const [userPassword, setUserPassword] = useState('')
   const [userRole, setUserRole] = useState<Role>('Operator')
   const [error, setError] = useState('')
+  const [navOpen, setNavOpen] = useState(false)
 
   async function request(url: string, init?: RequestInit) {
     const response = await fetch(url, { ...init, credentials: 'include' })
@@ -130,6 +153,18 @@ function App() {
     const response = await request('/api/jobs')
     if (!response.ok) return
     setJobs((await response.json()) as Job[])
+  }
+
+  async function refreshStaff() {
+    const response = await request('/api/staff')
+    if (!response.ok) return
+    setStaff((await response.json()) as Staff[])
+  }
+
+  async function refreshAssignments() {
+    const response = await request('/api/assignments')
+    if (!response.ok) return
+    setAssignments((await response.json()) as Assignment[])
   }
 
   async function refreshStock() {
@@ -167,6 +202,8 @@ function App() {
       refreshItems(),
       refreshWarehouses(),
       refreshJobs(),
+      refreshStaff(),
+      refreshAssignments(),
       refreshStock(),
       refreshMovements(),
       refreshSuppliers(),
@@ -340,6 +377,68 @@ function App() {
     setError(body.error ?? 'Could not delete Job')
   }
 
+  async function onCreateStaff(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/staff', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name: staffName }),
+    })
+    if (response.status === 201) {
+      setStaffName('')
+      await refreshStaff()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Staff')
+  }
+
+  async function onDeleteStaff(id: string) {
+    setError('')
+    const response = await request(`/api/staff/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshStaff()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete Staff')
+  }
+
+  async function onCreateAssignment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/assignments', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        staffId: assignmentStaffId,
+        jobId: assignmentJobId,
+        startsOn: assignmentStartsOn,
+        endsOn: assignmentEndsOn,
+      }),
+    })
+    if (response.status === 201) {
+      setAssignmentStartsOn('')
+      setAssignmentEndsOn('')
+      await refreshAssignments()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Assignment')
+  }
+
+  async function onDeleteAssignment(id: string) {
+    setError('')
+    const response = await request(`/api/assignments/${id}`, { method: 'DELETE' })
+    if (response.status === 204) {
+      await refreshAssignments()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not delete Assignment')
+  }
+
   async function onCreateSupplier(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
@@ -494,6 +593,10 @@ function App() {
     return jobs.find((job) => job.id === id)?.name ?? id
   }
 
+  function staffNameOf(id: string) {
+    return staff.find((row) => row.id === id)?.name ?? id
+  }
+
   function supplierNameOf(id: string) {
     return suppliers.find((supplier) => supplier.id === id)?.name ?? id
   }
@@ -552,13 +655,23 @@ function App() {
     <div className="app">
       <header className="top-nav">
         <span className="wordmark">Fake ERP</span>
-        <nav>
+        <button
+          className="nav-toggle"
+          type="button"
+          aria-expanded={navOpen}
+          aria-label="Menu"
+          onClick={() => setNavOpen((open) => !open)}
+        >
+          Menu
+        </button>
+        <nav className={navOpen ? 'is-open' : undefined}>
           <button
             className="nav-link"
             type="button"
             aria-current={screen === 'catalog' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('catalog')
             }}
           >
@@ -570,6 +683,7 @@ function App() {
             aria-current={screen === 'warehouse' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('warehouse')
             }}
           >
@@ -581,6 +695,7 @@ function App() {
             aria-current={screen === 'job' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('job')
             }}
           >
@@ -589,9 +704,22 @@ function App() {
           <button
             className="nav-link"
             type="button"
+            aria-current={screen === 'staff' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setNavOpen(false)
+              setScreen('staff')
+            }}
+          >
+            Staff
+          </button>
+          <button
+            className="nav-link"
+            type="button"
             aria-current={screen === 'stock' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('stock')
             }}
           >
@@ -603,6 +731,7 @@ function App() {
             aria-current={screen === 'inventory' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('inventory')
             }}
           >
@@ -614,6 +743,7 @@ function App() {
             aria-current={screen === 'procurement' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('procurement')
             }}
           >
@@ -625,13 +755,14 @@ function App() {
             aria-current={screen === 'users' ? 'page' : undefined}
             onClick={() => {
               setError('')
+              setNavOpen(false)
               setScreen('users')
             }}
           >
             Users
           </button>
         </nav>
-        <div className="session">
+        <div className={navOpen ? 'session is-open' : 'session'}>
           <span>{currentUser.email}</span>
           <button className="btn-secondary btn-compact" type="button" onClick={() => void onLogout()}>
             Logout
@@ -786,9 +917,129 @@ function App() {
         </section>
       ) : null}
 
+      {screen === 'staff' ? (
+        <section className="page">
+          <header className="page-banner page-banner-dark">
+            <h1>Staff</h1>
+            <p className="lede">A person who can be allocated. Not a User. Assignment ties Staff to a Job for a period.</p>
+          </header>
+          <form className="panel panel-soft" onSubmit={(event) => void onCreateStaff(event)}>
+            <label>
+              Name
+              <input
+                name="staffName"
+                value={staffName}
+                onChange={(event) => setStaffName(event.target.value)}
+                required
+              />
+            </label>
+            <button className="btn-primary" type="submit">
+              Create Staff
+            </button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {staff.length === 0 ? (
+            <p className="empty">No Staff yet.</p>
+          ) : (
+            <ul className="record-list">
+              {staff.map((row) => (
+                <li className="staff" key={row.id}>
+                  <span>{row.name}</span>
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteStaff(row.id)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form className="panel panel-soft" onSubmit={(event) => void onCreateAssignment(event)}>
+            <label>
+              Staff
+              <select
+                name="assignmentStaffId"
+                value={assignmentStaffId}
+                onChange={(event) => setAssignmentStaffId(event.target.value)}
+                required
+              >
+                <option value="">Select Staff</option>
+                {staff.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Job
+              <select
+                name="assignmentJobId"
+                value={assignmentJobId}
+                onChange={(event) => setAssignmentJobId(event.target.value)}
+                required
+              >
+                <option value="">Select Job</option>
+                {jobs.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Starts on
+              <input
+                name="startsOn"
+                type="date"
+                value={assignmentStartsOn}
+                onChange={(event) => setAssignmentStartsOn(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Ends on
+              <input
+                name="endsOn"
+                type="date"
+                value={assignmentEndsOn}
+                onChange={(event) => setAssignmentEndsOn(event.target.value)}
+                required
+              />
+            </label>
+            <button className="btn-primary" type="submit">
+              Create Assignment
+            </button>
+          </form>
+          {assignments.length === 0 ? (
+            <p className="empty">No Assignment yet.</p>
+          ) : (
+            <ul className="record-list">
+              {assignments.map((assignment) => (
+                <li className="assignment" key={assignment.id}>
+                  <span>{staffNameOf(assignment.staffId)}</span>
+                  <span>{jobNameOf(assignment.jobId)}</span>
+                  <span>{assignment.startsOn}</span>
+                  <span>{assignment.endsOn}</span>
+                  <button
+                    className="btn-secondary btn-compact"
+                    type="button"
+                    onClick={() => void onDeleteAssignment(assignment.id)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
       {screen === 'stock' ? (
         <section className="page">
-          <header className="page-banner page-banner-mint">
+          <header className="page-banner page-banner-soft">
             <h1>Stock</h1>
             <p className="lede">The quantity of one Item in one Warehouse.</p>
           </header>
@@ -796,9 +1047,12 @@ function App() {
           {stock.length === 0 ? (
             <p className="empty">No Stock yet.</p>
           ) : (
-            <ul className="record-list">
-              {stock.map((row) => (
-                <li className="stock" key={row.id}>
+            <ul className="demo-grid">
+              {stock.map((row, index) => (
+                <li
+                  className={`demo-card ${['demo-peach', 'demo-mint', 'demo-yellow', 'demo-mustard', 'demo-cream'][index % 5]}`}
+                  key={row.id}
+                >
                   <span>{warehouseNameOf(row.warehouseId)}</span>
                   <span>{itemLabelOf(row.itemId)}</span>
                   <span>
@@ -868,7 +1122,7 @@ function App() {
               Post Receipt
             </button>
           </form>
-          <form className="panel panel-mint" onSubmit={(event) => void onCreateTransfer(event)}>
+          <form className="panel panel-yellow" onSubmit={(event) => void onCreateTransfer(event)}>
             <h2>Transfer</h2>
             <label>
               From Warehouse
@@ -1030,7 +1284,7 @@ function App() {
 
       {screen === 'procurement' ? (
         <section className="page">
-          <header className="page-banner page-banner-forest">
+          <header className="page-banner page-banner-strong">
             <h1>Procurement</h1>
             <p className="lede">Supplier and Purchase. A Receipt from a Purchase raises Stock.</p>
           </header>
@@ -1067,7 +1321,7 @@ function App() {
               ))}
             </ul>
           )}
-          <form className="panel panel-soft" onSubmit={(event) => void onCreatePurchase(event)}>
+          <form className="panel panel-cream" onSubmit={(event) => void onCreatePurchase(event)}>
             <label>
               Supplier
               <select
@@ -1169,7 +1423,7 @@ function App() {
 
       {screen === 'users' ? (
         <section className="page">
-          <header className="page-banner page-banner-cream">
+          <header className="page-banner page-banner-forest">
             <h1>Users</h1>
             <p className="lede">A User has one Role: Administrator or Operator.</p>
           </header>

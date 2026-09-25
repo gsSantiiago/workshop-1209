@@ -1,58 +1,52 @@
-import { JobRepository, type JobRecord } from '../repositories/job.repository'
+import { StaffRepository, type StaffRecord } from '../repositories/staff.repository'
 
-export type JobInput = {
+export type StaffInput = {
   name?: string
 }
 
-export class JobService {
-  constructor(private readonly jobs: JobRepository) {}
+export class StaffService {
+  constructor(private readonly staff: StaffRepository) {}
 
-  list(): Promise<JobRecord[]> | JobRecord[] {
-    return this.jobs.list()
+  list(): Promise<StaffRecord[]> | StaffRecord[] {
+    return this.staff.list()
   }
 
-  async create(input: JobInput): Promise<JobRecord> {
+  async create(input: StaffInput): Promise<StaffRecord> {
     const name = input.name?.trim() ?? ''
     if (!name) {
       throw httpError('name is required', 400)
     }
 
-    const job: JobRecord = {
+    const record: StaffRecord = {
       id: crypto.randomUUID(),
       name,
       createdAt: new Date().toISOString(),
     }
 
     try {
-      await this.jobs.create(job)
+      await this.staff.create(record)
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw httpError('Job already exists', 409)
+        throw httpError('Staff already exists', 409)
       }
       throw error
     }
 
-    return job
+    return record
   }
 
   async deleteById(id: string): Promise<void> {
     let deleted: boolean
     try {
-      deleted = await this.jobs.deleteById(id)
+      deleted = await this.staff.deleteById(id)
     } catch (error) {
       if (isForeignKeyViolation(error)) {
-        if (await this.jobs.hasMovement(id)) {
-          throw httpError('Job has Movement', 409)
-        }
-        if (await this.jobs.hasAssignment(id)) {
-          throw httpError('Job has Assignment', 409)
-        }
-        throw httpError('Job has Movement', 409)
+        throw httpError('Staff has Assignment', 409)
       }
       throw error
     }
     if (!deleted) {
-      throw httpError('Job not found', 404)
+      throw httpError('Staff not found', 404)
     }
   }
 }

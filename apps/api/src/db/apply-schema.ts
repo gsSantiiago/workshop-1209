@@ -81,6 +81,26 @@ export function applySchema(sqlite: Database): void {
       FOREIGN KEY (purchase_id) REFERENCES purchases(id)
     );
     CREATE UNIQUE INDEX IF NOT EXISTS movements_purchase_id_unique ON movements (purchase_id);
+
+    CREATE TABLE IF NOT EXISTS staff (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS staff_name_unique ON staff (name);
+
+    CREATE TABLE IF NOT EXISTS assignments (
+      id TEXT PRIMARY KEY NOT NULL,
+      staff_id TEXT NOT NULL,
+      job_id TEXT NOT NULL,
+      starts_on TEXT NOT NULL,
+      ends_on TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (staff_id) REFERENCES staff(id),
+      FOREIGN KEY (job_id) REFERENCES jobs(id)
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS assignments_staff_job_period_unique
+      ON assignments (staff_id, job_id, starts_on, ends_on);
   `)
 
   ensureMovementsPurchaseId(sqlite)

@@ -41,6 +41,36 @@ export const purchases = sqliteTable('purchases', {
   createdAt: text('created_at').notNull(),
 })
 
+export const staff = sqliteTable('staff', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  createdAt: text('created_at').notNull(),
+})
+
+export const assignments = sqliteTable(
+  'assignments',
+  {
+    id: text('id').primaryKey(),
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    jobId: text('job_id')
+      .notNull()
+      .references(() => jobs.id),
+    startsOn: text('starts_on').notNull(),
+    endsOn: text('ends_on').notNull(),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [
+    uniqueIndex('assignments_staff_job_period_unique').on(
+      table.staffId,
+      table.jobId,
+      table.startsOn,
+      table.endsOn,
+    ),
+  ],
+)
+
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),

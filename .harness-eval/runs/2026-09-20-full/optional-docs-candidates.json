@@ -1,0 +1,18 @@
+{
+  "policy": {
+    "agent_harness_refs": "always_include",
+    "adr_rfc_decision_records": "always_exclude",
+    "other_cited_docs": "opt_in_after_user_approval"
+  },
+  "excluded_decision_records": [],
+  "optional_by_type": {
+    "CONTEXT.md": [
+      "CONTEXT.md"
+    ],
+    "package.json": [
+      "package.json"
+    ]
+  },
+  "included_optional_docs": [],
+  "included_doc_types": []
+}
