@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import type { AppDatabase } from '../db/client'
-import { items, purchases, suppliers, warehouses } from '../db/schema'
+import { items, movements, purchases, requisitions, suppliers, warehouses } from '../db/schema'
 
 export type PurchaseRecord = {
   id: string
@@ -63,6 +63,24 @@ export class PurchaseRepository {
       .where(eq(purchases.id, id))
       .returning({ id: purchases.id })
     return deleted.length > 0
+  }
+
+  async hasMovement(purchaseId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: movements.id })
+      .from(movements)
+      .where(eq(movements.purchaseId, purchaseId))
+      .limit(1)
+    return rows.length > 0
+  }
+
+  async hasRequisition(purchaseId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: requisitions.id })
+      .from(requisitions)
+      .where(eq(requisitions.purchaseId, purchaseId))
+      .limit(1)
+    return rows.length > 0
   }
 }
 

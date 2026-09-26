@@ -11,6 +11,7 @@ export function createDb() {
   const sqlite = new Database(config.DB_FILE_NAME, { create: true })
   sqlite.exec('PRAGMA journal_mode = WAL;')
   sqlite.exec('PRAGMA foreign_keys = ON;')
+  sqlite.exec('PRAGMA busy_timeout = 5000;')
   applySchema(sqlite)
   return drizzle({ client: sqlite, schema })
 }

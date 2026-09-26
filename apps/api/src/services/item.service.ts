@@ -47,6 +47,12 @@ export class ItemService {
       deleted = await this.items.deleteById(id)
     } catch (error) {
       if (isForeignKeyViolation(error)) {
+        if (await this.items.hasStock(id)) {
+          throw httpError('Item has Stock', 409)
+        }
+        if (await this.items.hasRequisition(id)) {
+          throw httpError('Item has Requisition', 409)
+        }
         throw httpError('Item has Stock', 409)
       }
       throw error

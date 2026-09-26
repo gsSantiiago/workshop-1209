@@ -141,6 +141,38 @@ describe('PurchaseService', () => {
     }
   })
 
+  test('criterion 41: deleteById maps Movement presence to 409 Purchase has Movement even with a Requisition', async () => {
+    const purchases = sinon.createStubInstance(PurchaseRepository)
+    purchases.deleteById.rejects(foreignKeyByCode())
+    purchases.hasMovement.resolves(true)
+    purchases.hasRequisition.resolves(true)
+    const service = new PurchaseService(purchases)
+
+    try {
+      await service.deleteById('purchase-1')
+      throw new Error('expected deleteById to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Purchase has Movement')
+    }
+  })
+
+  test('criterion 42: deleteById maps Requisition presence to 409 Purchase has Requisition', async () => {
+    const purchases = sinon.createStubInstance(PurchaseRepository)
+    purchases.deleteById.rejects(foreignKeyByCode())
+    purchases.hasMovement.resolves(false)
+    purchases.hasRequisition.resolves(true)
+    const service = new PurchaseService(purchases)
+
+    try {
+      await service.deleteById('purchase-1')
+      throw new Error('expected deleteById to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Purchase has Requisition')
+    }
+  })
+
   test('C15 deleteById throws 404 when the repository deletes nothing', async () => {
     const purchases = sinon.createStubInstance(PurchaseRepository)
     purchases.deleteById.resolves(false)

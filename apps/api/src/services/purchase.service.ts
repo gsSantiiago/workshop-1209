@@ -52,6 +52,12 @@ export class PurchaseService {
       deleted = await this.purchases.deleteById(id)
     } catch (error) {
       if (isForeignKeyViolation(error)) {
+        if (await this.purchases.hasMovement(id)) {
+          throw httpError('Purchase has Movement', 409)
+        }
+        if (await this.purchases.hasRequisition(id)) {
+          throw httpError('Purchase has Requisition', 409)
+        }
         throw httpError('Purchase has Movement', 409)
       }
       throw error

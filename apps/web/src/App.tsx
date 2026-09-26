@@ -1,7 +1,16 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import './App.css'
 
-type Screen = 'catalog' | 'warehouse' | 'job' | 'staff' | 'stock' | 'inventory' | 'procurement' | 'users'
+type Screen =
+  | 'catalog'
+  | 'warehouse'
+  | 'job'
+  | 'staff'
+  | 'stock'
+  | 'inventory'
+  | 'requisition'
+  | 'procurement'
+  | 'users'
 type Role = 'Administrator' | 'Operator'
 
 type User = {
@@ -81,6 +90,16 @@ type Purchase = {
   createdAt: string
 }
 
+type Requisition = {
+  id: string
+  itemId: string
+  jobId: string
+  quantity: number
+  status: 'open' | 'converted' | 'refused' | 'cancelled'
+  purchaseId: string | null
+  createdAt: string
+}
+
 function App() {
   const [ready, setReady] = useState(false)
   const [currentUser, setCurrentUser] = useState<User | null>(null)
@@ -94,6 +113,7 @@ function App() {
   const [movements, setMovements] = useState<Movement[]>([])
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [purchases, setPurchases] = useState<Purchase[]>([])
+  const [requisitions, setRequisitions] = useState<Requisition[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
@@ -110,6 +130,11 @@ function App() {
   const [purchaseItemId, setPurchaseItemId] = useState('')
   const [purchaseWarehouseId, setPurchaseWarehouseId] = useState('')
   const [purchaseQuantity, setPurchaseQuantity] = useState('')
+  const [requisitionItemId, setRequisitionItemId] = useState('')
+  const [requisitionJobId, setRequisitionJobId] = useState('')
+  const [requisitionQuantity, setRequisitionQuantity] = useState('')
+  const [convertSupplierId, setConvertSupplierId] = useState<Record<string, string>>({})
+  const [convertWarehouseId, setConvertWarehouseId] = useState<Record<string, string>>({})
   const [warehouseId, setWarehouseId] = useState('')
   const [itemId, setItemId] = useState('')
   const [quantity, setQuantity] = useState('')
@@ -191,6 +216,12 @@ function App() {
     setPurchases((await response.json()) as Purchase[])
   }
 
+  async function refreshRequisitions() {
+    const response = await request('/api/requisitions')
+    if (!response.ok) return
+    setRequisitions((await response.json()) as Requisition[])
+  }
+
   async function refreshUsers() {
     const response = await request('/api/users')
     if (!response.ok) return
@@ -208,6 +239,7 @@ function App() {
       refreshMovements(),
       refreshSuppliers(),
       refreshPurchases(),
+      refreshRequisitions(),
       refreshUsers(),
     ])
   }
@@ -489,6 +521,69 @@ function App() {
     setError(body.error ?? 'Could not create Purchase')
   }
 
+  async function onCreateRequisition(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    const response = await request('/api/requisitions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        itemId: requisitionItemId,
+        jobId: requisitionJobId,
+        quantity: Number(requisitionQuantity),
+      }),
+    })
+    if (response.status === 201) {
+      setRequisitionQuantity('')
+      await refreshRequisitions()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not create Requisition')
+  }
+
+  async function onCancelRequisition(id: string) {
+    setError('')
+    const response = await request(`/api/requisitions/${id}/cancel`, { method: 'POST' })
+    if (response.ok) {
+      await refreshRequisitions()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not cancel Requisition')
+  }
+
+  async function onConvertRequisition(id: string) {
+    setError('')
+    const response = await request(`/api/requisitions/${id}/convert`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        supplierId: convertSupplierId[id] ?? '',
+        warehouseId: convertWarehouseId[id] ?? '',
+      }),
+    })
+    if (response.ok) {
+      await refreshRequisitions()
+      await refreshPurchases()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not convert Requisition')
+  }
+
+  async function onRefuseRequisition(id: string) {
+    setError('')
+    const response = await request(`/api/requisitions/${id}/refuse`, { method: 'POST' })
+    if (response.ok) {
+      await refreshRequisitions()
+      await refreshPurchases()
+      return
+    }
+    const body = (await response.json()) as { error?: string }
+    setError(body.error ?? 'Could not refuse Requisition')
+  }
+
   async function onDeletePurchase(id: string) {
     setError('')
     const response = await request(`/api/purchases/${id}`, { method: 'DELETE' })
@@ -748,6 +843,18 @@ function App() {
             }}
           >
             Procurement
+          </button>
+          <button
+            className="nav-link"
+            type="button"
+            aria-current={screen === 'requisition' ? 'page' : undefined}
+            onClick={() => {
+              setError('')
+              setNavOpen(false)
+              setScreen('requisition')
+            }}
+          >
+            Requisition
           </button>
           <button
             className="nav-link"
@@ -1275,6 +1382,144 @@ function App() {
                         ? jobNameOf(movement.jobId)
                         : ''}
                   </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
+      {screen === 'requisition' ? (
+        <section className="page">
+          <header className="page-banner page-banner-soft">
+            <h1>Requisition</h1>
+            <p className="lede">The ask for one Item, one quantity, and one Job. It does not write Stock.</p>
+          </header>
+          <form className="panel panel-cream" onSubmit={(event) => void onCreateRequisition(event)}>
+            <label>
+              Item
+              <select
+                name="requisitionItemId"
+                value={requisitionItemId}
+                onChange={(event) => setRequisitionItemId(event.target.value)}
+                required
+              >
+                <option value="">Select Item</option>
+                {items.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.sku} {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Quantity
+              <input
+                name="requisitionQuantity"
+                type="number"
+                min="0"
+                step="any"
+                value={requisitionQuantity}
+                onChange={(event) => setRequisitionQuantity(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              Job
+              <select
+                name="requisitionJobId"
+                value={requisitionJobId}
+                onChange={(event) => setRequisitionJobId(event.target.value)}
+                required
+              >
+                <option value="">Select Job</option>
+                {jobs.map((job) => (
+                  <option key={job.id} value={job.id}>
+                    {job.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="btn-primary" type="submit">
+              Create Requisition
+            </button>
+          </form>
+          {error ? <p role="alert">{error}</p> : null}
+          {requisitions.length === 0 ? (
+            <p className="empty">No Requisition yet.</p>
+          ) : (
+            <ul className="record-list">
+              {requisitions.map((requisition) => (
+                <li className="requisition" key={requisition.id}>
+                  <span>{itemLabelOf(requisition.itemId)}</span>
+                  <span>{requisition.quantity}</span>
+                  <span>{jobNameOf(requisition.jobId)}</span>
+                  <span>{requisition.status}</span>
+                  {requisition.status === 'open' ? (
+                    <>
+                      <button
+                        className="btn-secondary btn-compact"
+                        type="button"
+                        onClick={() => void onCancelRequisition(requisition.id)}
+                      >
+                        Cancel
+                      </button>
+                      <label>
+                        Supplier
+                        <select
+                          name="convertSupplierId"
+                          value={convertSupplierId[requisition.id] ?? ''}
+                          onChange={(event) =>
+                            setConvertSupplierId((current) => ({
+                              ...current,
+                              [requisition.id]: event.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">Select Supplier</option>
+                          {suppliers.map((supplier) => (
+                            <option key={supplier.id} value={supplier.id}>
+                              {supplier.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Warehouse
+                        <select
+                          name="convertWarehouseId"
+                          value={convertWarehouseId[requisition.id] ?? ''}
+                          onChange={(event) =>
+                            setConvertWarehouseId((current) => ({
+                              ...current,
+                              [requisition.id]: event.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">Select Warehouse</option>
+                          {warehouses.map((warehouse) => (
+                            <option key={warehouse.id} value={warehouse.id}>
+                              {warehouse.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <button
+                        className="btn-primary btn-compact"
+                        type="button"
+                        onClick={() => void onConvertRequisition(requisition.id)}
+                      >
+                        Convert
+                      </button>
+                      <button
+                        className="btn-secondary btn-compact"
+                        type="button"
+                        onClick={() => void onRefuseRequisition(requisition.id)}
+                      >
+                        Refuse
+                      </button>
+                    </>
+                  ) : null}
                 </li>
               ))}
             </ul>

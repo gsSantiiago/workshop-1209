@@ -47,6 +47,9 @@ export class JobService {
         if (await this.jobs.hasAssignment(id)) {
           throw httpError('Job has Assignment', 409)
         }
+        if (await this.jobs.hasRequisition(id)) {
+          throw httpError('Job has Requisition', 409)
+        }
         throw httpError('Job has Movement', 409)
       }
       throw error

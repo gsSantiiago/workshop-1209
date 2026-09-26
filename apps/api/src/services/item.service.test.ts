@@ -161,4 +161,44 @@ describe('ItemService', () => {
       expect((error as Error).message).toBe('Item has Stock')
     }
   })
+
+  test('criterion 15: deleteById maps Stock presence to 409 Item has Stock even with a Requisition', async () => {
+    const items = sinon.createStubInstance(ItemRepository)
+    items.deleteById.rejects(
+      Object.assign(new Error('FOREIGN KEY constraint failed'), {
+        code: 'SQLITE_CONSTRAINT_FOREIGNKEY',
+      }),
+    )
+    items.hasStock.resolves(true)
+    items.hasRequisition.resolves(true)
+    const service = new ItemService(items)
+
+    try {
+      await service.deleteById('item-1')
+      throw new Error('expected deleteById to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Item has Stock')
+    }
+  })
+
+  test('criterion 14: deleteById maps Requisition presence to 409 Item has Requisition', async () => {
+    const items = sinon.createStubInstance(ItemRepository)
+    items.deleteById.rejects(
+      Object.assign(new Error('FOREIGN KEY constraint failed'), {
+        code: 'SQLITE_CONSTRAINT_FOREIGNKEY',
+      }),
+    )
+    items.hasStock.resolves(false)
+    items.hasRequisition.resolves(true)
+    const service = new ItemService(items)
+
+    try {
+      await service.deleteById('item-1')
+      throw new Error('expected deleteById to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Item has Requisition')
+    }
+  })
 })

@@ -26,6 +26,8 @@ export const suppliers = sqliteTable('suppliers', {
   createdAt: text('created_at').notNull(),
 })
 
+export const requisitionStatuses = ['open', 'converted', 'refused', 'cancelled'] as const
+
 export const purchases = sqliteTable('purchases', {
   id: text('id').primaryKey(),
   supplierId: text('supplier_id')
@@ -40,6 +42,24 @@ export const purchases = sqliteTable('purchases', {
   quantity: real('quantity').notNull(),
   createdAt: text('created_at').notNull(),
 })
+
+export const requisitions = sqliteTable(
+  'requisitions',
+  {
+    id: text('id').primaryKey(),
+    itemId: text('item_id')
+      .notNull()
+      .references(() => items.id),
+    jobId: text('job_id')
+      .notNull()
+      .references(() => jobs.id),
+    quantity: real('quantity').notNull(),
+    status: text('status').notNull(),
+    purchaseId: text('purchase_id').references(() => purchases.id),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => [uniqueIndex('requisitions_purchase_id_unique').on(table.purchaseId)],
+)
 
 export const staff = sqliteTable('staff', {
   id: text('id').primaryKey(),

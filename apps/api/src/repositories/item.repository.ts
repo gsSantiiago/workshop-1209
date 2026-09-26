@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import type { AppDatabase } from '../db/client'
-import { items } from '../db/schema'
+import { items, requisitions, stock } from '../db/schema'
 
 export type ItemRecord = {
   id: string
@@ -40,5 +40,23 @@ export class ItemRepository {
       .where(eq(items.id, id))
       .returning({ id: items.id })
     return deleted.length > 0
+  }
+
+  async hasStock(itemId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: stock.id })
+      .from(stock)
+      .where(eq(stock.itemId, itemId))
+      .limit(1)
+    return rows.length > 0
+  }
+
+  async hasRequisition(itemId: string): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: requisitions.id })
+      .from(requisitions)
+      .where(eq(requisitions.itemId, itemId))
+      .limit(1)
+    return rows.length > 0
   }
 }

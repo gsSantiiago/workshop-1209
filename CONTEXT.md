@@ -71,3 +71,7 @@ _Avoid_: transferência, move between Jobs
 **Issue**:
 Quantity of an Item leaving a Warehouse for a Job. The Job does not hold that quantity.
 _Avoid_: baixa, saída, quantity on the Job
+
+**Requisition**:
+the ask for one Item, one quantity, and one Job. It does not write Stock.
+_Avoid_: pedido, Purchase (as this ask)

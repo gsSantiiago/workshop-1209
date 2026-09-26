@@ -144,6 +144,23 @@ describe('JobService', () => {
     }
   })
 
+  test('criterion 11: deleteById maps Requisition presence to 409 Job has Requisition', async () => {
+    const jobs = sinon.createStubInstance(JobRepository)
+    jobs.deleteById.rejects(foreignKeyByCode())
+    jobs.hasMovement.resolves(false)
+    jobs.hasAssignment.resolves(false)
+    jobs.hasRequisition.resolves(true)
+    const service = new JobService(jobs)
+
+    try {
+      await service.deleteById('job-1')
+      throw new Error('expected deleteById to throw')
+    } catch (error) {
+      expect((error as Error & { statusCode: number }).statusCode).toBe(409)
+      expect((error as Error).message).toBe('Job has Requisition')
+    }
+  })
+
   test('S8 deleteById throws 404 when the repository deletes nothing', async () => {
     const jobs = sinon.createStubInstance(JobRepository)
     jobs.deleteById.resolves(false)
