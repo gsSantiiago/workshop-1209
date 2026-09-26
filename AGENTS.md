@@ -14,6 +14,7 @@ HTTP: domain under `/api/...`. Health is `GET /health`. Errors: throw `Error` wi
 
 `bun:test` on the API. Obligations add up: a green integration test does not replace the service suite.
 
+
 | Layer            | What it proves                                                                   | How                                                                                           |
 | ---------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | Service          | every branch that changes the outcome                                            | unit, `sinon.createStubInstance` of the repository, no IO                                     |
@@ -21,13 +22,14 @@ HTTP: domain under `/api/...`. Health is `GET /health`. Errors: throw `Error` wi
 | Repository alone | nothing                                                                          | no suite of its own                                                                           |
 | Web              | nothing in git                                                                   | Playwright at the end of the change — MCP, not a suite in the repo                            |
 
+
 - Unit stub: `sinon.createStubInstance(ItemRepository)` — then `items.create.resolves()` / `.rejects(err)`; assert `calledOnce`, `notCalled`, `firstCall.args`. Never `new ItemRepository` in the service suite.
-- Unique SKU: the service maps a SQLite unique violation to `409` (unit, stub rejects with that error). The unique _index_ is proven by integration. The service does not `findBySku`.
+- Unique SKU: the service maps a SQLite unique violation to `409` (unit, stub rejects with that error). The unique *index* is proven by integration. The service does not `findBySku`.
 - `container.clear()` before a second `createServer()`. Without it: `Already registered`.
 
-## Linear backlog
+## Jira backlog
 
-Use the team Wald-test for backlog for this project, always follow the tlc-plan task format
+Use the Jira project NAS, board 1855 (https://b2rise.atlassian.net/jira/software/c/projects/NAS/boards/1855/backlog), for this project's backlog. Always follow the tlc-plan task format.
 
 ## Screens
 

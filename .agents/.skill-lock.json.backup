@@ -34,7 +34,49 @@
       "source": "local",
       "contentHash": "675761f3fdb123f26103811ffe52e384adff5ffdf7c603578dfaa4eb2e54b2a2",
       "installedAt": "2026-09-20T00:22:46.823Z",
-      "updatedAt": "2026-09-20T00:22:46.835Z",
+      "updatedAt": "2026-09-20T00:22:46.847Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "tlc-discover": {
+      "name": "tlc-discover",
+      "source": "local",
+      "contentHash": "518ab626fc8bac4ed1d0c5170b617d1adaec28a83634c1a462c7529d42170d3a",
+      "installedAt": "2026-09-26T16:28:48.794Z",
+      "updatedAt": "2026-09-26T16:28:48.807Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "tlc-plan": {
+      "name": "tlc-plan",
+      "source": "local",
+      "contentHash": "428b064742db100add4d42612ce61eaed040aad87e6718e494a09ad9ae03552b",
+      "installedAt": "2026-09-26T16:50:04.658Z",
+      "updatedAt": "2026-09-26T16:50:04.679Z",
+      "agents": [
+        "cursor",
+        "claude-code",
+        "windsurf"
+      ],
+      "method": "copy",
+      "global": false
+    },
+    "tlc-implement": {
+      "name": "tlc-implement",
+      "source": "local",
+      "contentHash": "b3bbd69d067b042072e9538ea5edc90db28b0873fdf4d86157ca4ae5363bfd9e",
+      "installedAt": "2026-09-26T17:13:17.106Z",
+      "updatedAt": "2026-09-26T17:13:17.114Z",
       "agents": [
         "cursor",
         "claude-code"
